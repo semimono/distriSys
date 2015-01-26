@@ -9,7 +9,7 @@ import java.net.InetAddress;
  */
 public interface Protocol {
 
-	public static final byte OVERLAY_NODE_REPORTS_TASK_FINSIHED = 0;
+	public static final byte OVERLAY_NODE_REPORTS_TASK_FINISHED = 0;
 	public static final byte OVERLAY_NODE_REPORTS_TRAFFIC_SUMMARY = 1;
 	public static final byte OVERLAY_NODE_SENDS_DATA = 2;
 	public static final byte OVERLAY_NODE_SENDS_DEREGISTRATION = 3;

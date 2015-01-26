@@ -20,7 +20,7 @@ public class OverlayNodeReportsTaskFinished implements Protocol {
 		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
-		dataOut.writeByte(OVERLAY_NODE_REPORTS_TASK_FINSIHED);
+		dataOut.writeByte(OVERLAY_NODE_REPORTS_TASK_FINISHED);
 
 		dataOut.flush();
 		marshalledBytes = baOutputStream.toByteArray();
