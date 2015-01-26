@@ -1,4 +1,4 @@
-package cs455.overlay;
+package cs455.overlay.node;
 
 import java.util.List;
 import java.util.Random;
@@ -6,12 +6,12 @@ import java.util.Random;
 /**
  * Created by Cullen on 1/22/2015.
  */
-public class Register {
+public class Registry {
 
 	List<NodeInfo> nodes;
 	Random rand;
 
-	public Register() {
+	public Registry() {
 		rand = new Random();
 	}
 

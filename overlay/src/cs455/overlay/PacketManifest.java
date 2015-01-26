@@ -1,6 +1,6 @@
 package cs455.overlay;
 
-import cs455.overlay.NodeInfo;
+import cs455.overlay.node.NodeInfo;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
@@ -12,12 +12,12 @@ import java.util.List;
 public class PacketManifest {
 
 	public List<NodeInfo> routingTable;
-	public List<int> nodeIds;
+	public List<Integer> nodeIds;
 
 
 	public PacketManifest() {
 		routingTable = new ArrayList<NodeInfo>();
-		nodeIds = new ArrayList<int>();
+		nodeIds = new ArrayList<Integer>();
 	}
 
 	public PacketManifest(ByteArrayInputStream stream) {
