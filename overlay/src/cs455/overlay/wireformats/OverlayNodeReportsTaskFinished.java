@@ -5,7 +5,7 @@ import java.io.*;
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class OverlayNodeReportsTaskFinished implements Protocol {
+public class OverlayNodeReportsTaskFinished implements Event {
 
 
 	public OverlayNodeReportsTaskFinished() {
@@ -20,7 +20,7 @@ public class OverlayNodeReportsTaskFinished implements Protocol {
 		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
-		dataOut.writeByte(OVERLAY_NODE_REPORTS_TASK_FINISHED);
+		dataOut.writeByte(Protocol.OVERLAY_NODE_REPORTS_TASK_FINISHED);
 
 		dataOut.flush();
 		marshalledBytes = baOutputStream.toByteArray();

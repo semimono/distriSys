@@ -8,7 +8,7 @@ import java.net.InetAddress;
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class OverlayNodeSendsRegistration implements Protocol {
+public class OverlayNodeSendsRegistration implements Event {
 
     public InetAddress address;
     public int port;
@@ -35,7 +35,7 @@ public class OverlayNodeSendsRegistration implements Protocol {
 		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
-		dataOut.writeByte(OVERLAY_NODE_SENDS_REGISTRATION);
+		dataOut.writeByte(Protocol.OVERLAY_NODE_SENDS_REGISTRATION);
 		dataOut.writeByte(address.getAddress().length);
 		dataOut.write(address.getAddress());
 		dataOut.writeInt(port);

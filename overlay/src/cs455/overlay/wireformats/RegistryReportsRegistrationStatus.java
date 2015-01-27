@@ -8,7 +8,7 @@ import java.net.InetAddress;
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class RegistryReportsRegistrationStatus implements Protocol {
+public class RegistryReportsRegistrationStatus implements Event {
 
 	public int status;
 	public String info;
@@ -34,7 +34,7 @@ public class RegistryReportsRegistrationStatus implements Protocol {
 		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
-		dataOut.writeByte(REGISTRY_REPORTS_REGISTRATION_STATUS);
+		dataOut.writeByte(Protocol.REGISTRY_REPORTS_REGISTRATION_STATUS);
 		dataOut.writeInt(status);
 		dataOut.writeByte(info.length());
 		dataOut.writeBytes(info);

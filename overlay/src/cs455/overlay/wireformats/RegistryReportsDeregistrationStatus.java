@@ -5,7 +5,7 @@ import java.io.*;
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class RegistryReportsDeregistrationStatus implements Protocol {
+public class RegistryReportsDeregistrationStatus implements Event {
 
 	public String info;
 
@@ -28,7 +28,7 @@ public class RegistryReportsDeregistrationStatus implements Protocol {
 		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
-		dataOut.writeByte(REGISTRY_REPORTS_DEREGISTRATION_STATUS);
+		dataOut.writeByte(Protocol.REGISTRY_REPORTS_DEREGISTRATION_STATUS);
 		dataOut.writeByte(info.length());
 		dataOut.writeBytes(info);
 
