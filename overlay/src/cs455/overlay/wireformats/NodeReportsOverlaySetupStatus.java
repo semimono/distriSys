@@ -32,6 +32,9 @@ public class NodeReportsOverlaySetupStatus implements Event {
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
 		dataOut.writeByte(Protocol.NODE_REPORTS_OVERLAY_SETUP_STATUS);
+		dataOut.writeInt(status);
+		dataOut.writeByte(info.length());
+		dataOut.writeBytes(info);
 
 		dataOut.flush();
 		marshalledBytes = baOutputStream.toByteArray();

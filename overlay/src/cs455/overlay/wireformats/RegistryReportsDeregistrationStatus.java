@@ -14,12 +14,7 @@ public class RegistryReportsDeregistrationStatus implements Event {
 	}
 
 	public RegistryReportsDeregistrationStatus(DataInputStream dataIn) throws IOException {
-		byte infoLength = dataIn.readByte();
-		byte[] infoArray = new byte[infoLength];
-		int readInfoLength = dataIn.read(infoArray);
-		if (readInfoLength != infoLength)
-			throw new IOException("BAD INFORMATION FIELD LENGTH! Correct: " +infoLength +" Incorrect: " +readInfoLength);
-		info = new String(infoArray);
+		info = Protocol.readString(dataIn);
 	}
 
 	@Override

@@ -5,7 +5,7 @@ import java.io.*;
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class RegistryRequestsTrafficSummary implements Protocol {
+public class RegistryRequestsTrafficSummary implements Event {
 
 
 	public RegistryRequestsTrafficSummary() {
@@ -20,7 +20,7 @@ public class RegistryRequestsTrafficSummary implements Protocol {
 		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
-		dataOut.writeByte(REGISTRY_REQUESTS_TRAFFIC_SUMMARY);
+		dataOut.writeByte(Protocol.REGISTRY_REQUESTS_TRAFFIC_SUMMARY);
 
 		dataOut.flush();
 		marshalledBytes = baOutputStream.toByteArray();

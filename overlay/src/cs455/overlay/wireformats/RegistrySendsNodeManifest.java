@@ -1,6 +1,5 @@
 package cs455.overlay.wireformats;
 
-import cs455.overlay.Misc;
 import cs455.overlay.routing.RoutingEntry;
 import cs455.overlay.routing.RoutingTable;
 
@@ -10,7 +9,7 @@ import java.net.InetAddress;
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class RegistrySendsNodeManifest implements Protocol {
+public class RegistrySendsNodeManifest implements Event {
 
 	public RoutingTable table;
 	public int[] nodeIds;
@@ -26,7 +25,7 @@ public class RegistrySendsNodeManifest implements Protocol {
 
 		for(int i=0; i<tableSize; ++i) {
 			int nodeId = dataIn.readInt();
-			InetAddress address = Misc.readAddress(dataIn);
+			InetAddress address = Protocol.readAddress(dataIn);
 			int port = dataIn.readInt();
 			table.entries[i] = new RoutingEntry(nodeId, address, port);
 		}
@@ -43,7 +42,7 @@ public class RegistrySendsNodeManifest implements Protocol {
 		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
-		dataOut.writeByte(REGISTRY_SENDS_NODE_MANIFEST);
+		dataOut.writeByte(Protocol.REGISTRY_SENDS_NODE_MANIFEST);
 		dataOut.writeByte(table.size());
 		for(RoutingEntry entry: table.entries) {
 			dataOut.writeInt(entry.id);

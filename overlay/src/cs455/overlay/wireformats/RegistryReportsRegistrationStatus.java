@@ -20,12 +20,7 @@ public class RegistryReportsRegistrationStatus implements Event {
 
 	public RegistryReportsRegistrationStatus(DataInputStream dataIn) throws IOException {
 		status = dataIn.readInt();
-		byte infoLength = dataIn.readByte();
-		byte[] infoArray = new byte[infoLength];
-		int readInfoLength = dataIn.read(infoArray);
-		if (readInfoLength != infoLength)
-			throw new IOException("BAD INFORMATION FIELD LENGTH! Correct: " +infoLength +" Incorrect: " +readInfoLength);
-		info = new String(infoArray);
+		info = Protocol.readString(dataIn);
 	}
 
 	@Override

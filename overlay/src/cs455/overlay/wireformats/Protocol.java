@@ -21,4 +21,21 @@ public class Protocol {
 	public static final byte REGISTRY_REQUESTS_TRAFFIC_SUMMARY = 9;
 	public static final byte REGISTRY_SENDS_NODE_MANIFEST = 10;
 
+	public static InetAddress readAddress(DataInputStream dataIn) throws IOException {
+		byte ipLength = dataIn.readByte();
+		byte[] addressArray = new byte[ipLength];
+		int readIpLength = dataIn.read(addressArray);
+		if (readIpLength != ipLength)
+			throw new IOException("BAD IP ADDRESS FIELD LENGTH! Correct: " +ipLength +" Incorrect: " +readIpLength);
+		return InetAddress.getByAddress(addressArray);
+	}
+
+	public static String readString(DataInputStream dataIn) throws IOException {
+		byte infoLength = dataIn.readByte();
+		byte[] infoArray = new byte[infoLength];
+		int readInfoLength = dataIn.read(infoArray);
+		if (readInfoLength != infoLength)
+			throw new IOException("BAD STRING FIELD LENGTH! Correct: " +infoLength +" Incorrect: " +readInfoLength);
+		return new String(infoArray);
+	}
 }

@@ -1,7 +1,5 @@
 package cs455.overlay.wireformats;
 
-import cs455.overlay.Misc;
-
 import java.io.*;
 import java.net.InetAddress;
 
@@ -18,15 +16,9 @@ public class OverlayNodeSendsRegistration implements Event {
         this.port = port;
     }
 
-    public OverlayNodeSendsRegistration(byte[] marshalledBytes) throws IOException {
-		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
-		DataInputStream dataIn = new DataInputStream(new BufferedInputStream(baInputStream));
-
-		address = Misc.readAddress(dataIn);
+    public OverlayNodeSendsRegistration(DataInputStream dataIn) throws IOException {
+		address = Protocol.readAddress(dataIn);
 		port = dataIn.readInt();
-
-		baInputStream.close();
-	    dataIn.close();
     }
 
 	@Override

@@ -1,14 +1,12 @@
 package cs455.overlay.wireformats;
 
-import cs455.overlay.Misc;
-
 import java.io.*;
 import java.net.InetAddress;
 
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class OverlayNodeSendsDeregistration  implements Protocol {
+public class OverlayNodeSendsDeregistration implements Event {
 
 	public InetAddress address;
 	public int port;
@@ -20,15 +18,9 @@ public class OverlayNodeSendsDeregistration  implements Protocol {
 		this.id = id;
 	}
 
-	public OverlayNodeSendsDeregistration(byte[] marshalledBytes) throws IOException {
-		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
-		DataInputStream dataIn = new DataInputStream(new BufferedInputStream(baInputStream));
-
-		address = Misc.readAddress(dataIn);
+	public OverlayNodeSendsDeregistration(DataInputStream dataIn) throws IOException {
+		address = Protocol.readAddress(dataIn);
 		port = dataIn.readInt();
-
-		baInputStream.close();
-		dataIn.close();
 	}
 
 	@Override
@@ -37,7 +29,7 @@ public class OverlayNodeSendsDeregistration  implements Protocol {
 		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
-		dataOut.writeByte(OVERLAY_NODE_SENDS_DEREGISTRATION);
+		dataOut.writeByte(Protocol.OVERLAY_NODE_SENDS_DEREGISTRATION);
 		dataOut.writeByte(address.getAddress().length);
 		dataOut.write(address.getAddress());
 		dataOut.writeInt(port);
