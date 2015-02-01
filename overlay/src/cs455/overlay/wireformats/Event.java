@@ -1,5 +1,7 @@
 package cs455.overlay.wireformats;
 
+import cs455.overlay.transport.TCPConnection;
+
 import java.io.IOException;
 
 /**
@@ -8,4 +10,7 @@ import java.io.IOException;
 public interface Event {
 
 	public byte[] getBytes() throws IOException;
+
+	public void execute(TCPConnection con);
+
 }

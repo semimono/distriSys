@@ -3,26 +3,50 @@ package cs455.overlay.transport;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class TCPServerThread {
+public class TCPServerThread extends Thread {
 
-	public static void listen(int port) throws IOException {
-		ServerSocket serverSocket = new ServerSocket(port);
-		while (true) {
-			Socket socket = serverSocket.accept();
-			while (socket.isConnected()) {
-				TCPReceiver receiver = new TCPReceiver(socket);
-				TCPSender sender = new TCPSender(socket);
-				byte[] rawBytes = receiver.receive();
-				String message = new String(rawBytes);
-				message = message.replaceAll(" ", "_");
-				sender.sendData(message.getBytes());
-			}
-		}
+	private int port;
+	ServerSocket serverSocket;
+
+	public TCPServerThread() throws IOException {
+		this(0);
+	}
+	public TCPServerThread(int port) throws IOException {
+		serverSocket = new ServerSocket(port);
+		this.port = serverSocket.getLocalPort();
 	}
 
+	public int getPort() {
+		return port;
+	}
 
+	public void close() throws IOException {
+		interrupt();
+		serverSocket.close();
+	}
+
+	@Override
+	public void run() {
+		try {
+			listen();
+		} catch (IOException e) {
+			System.err.println("TCP listening stopped erroneously");
+			e.printStackTrace();
+			return;
+		}
+		System.out.println("TCP listening stopped");
+	}
+
+	public void listen() throws IOException {
+		while (!serverSocket.isClosed()) {
+			Socket socket = serverSocket.accept();
+			new TCPConnection(socket);
+			System.out.println("Opened new connection");
+		}
+	}
 }

@@ -1,5 +1,7 @@
 package cs455.overlay.wireformats;
 
+import cs455.overlay.transport.TCPConnection;
+
 import java.io.*;
 
 /**
@@ -27,5 +29,10 @@ public class OverlayNodeReportsTrafficSummary implements Event {
 		baOutputStream.close();
 		dataOut.close();
 		return marshalledBytes;
+	}
+
+	@Override
+	public void execute(TCPConnection con) {
+
 	}
 }

@@ -2,6 +2,7 @@ package cs455.overlay.wireformats;
 
 import cs455.overlay.routing.RoutingEntry;
 import cs455.overlay.routing.RoutingTable;
+import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -59,5 +60,10 @@ public class RegistrySendsNodeManifest implements Event {
 		baOutputStream.close();
 		dataOut.close();
 		return marshalledBytes;
+	}
+
+	@Override
+	public void execute(TCPConnection con) {
+
 	}
 }

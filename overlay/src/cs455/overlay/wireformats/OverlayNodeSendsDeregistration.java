@@ -1,5 +1,9 @@
 package cs455.overlay.wireformats;
 
+import cs455.overlay.node.Node;
+import cs455.overlay.node.Registry;
+import cs455.overlay.transport.TCPConnection;
+
 import java.io.*;
 import java.net.InetAddress;
 
@@ -21,6 +25,7 @@ public class OverlayNodeSendsDeregistration implements Event {
 	public OverlayNodeSendsDeregistration(DataInputStream dataIn) throws IOException {
 		address = Protocol.readAddress(dataIn);
 		port = dataIn.readInt();
+		id = dataIn.readInt();
 	}
 
 	@Override
@@ -40,5 +45,26 @@ public class OverlayNodeSendsDeregistration implements Event {
 		baOutputStream.close();
 		dataOut.close();
 		return marshalledBytes;
+	}
+
+	@Override
+	public void execute(TCPConnection con) {
+		Registry registry = Registry.get();
+		Node oldNode = registry.get(id);
+		String info;
+		if (oldNode == null) {
+			info = "Error: Node ID " +id +" for deregistration not present in registry";
+		} else if (!address.equals(con.getAddress()) || !oldNode.address.equals(address) || oldNode.port != port) {
+			info = "Error: Incorrect host address specified in deregistration request";
+		} else {
+			registry.deregister(id);
+			info = "Deregistration successful for node id: " +id;
+		}
+		try {
+			con.send(new RegistryReportsDeregistrationStatus(info));
+		} catch (IOException e) {
+			System.err.println("Could not send deregistration response");
+			e.printStackTrace();
+		}
 	}
 }

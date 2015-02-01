@@ -1,5 +1,8 @@
 package cs455.overlay.wireformats;
 
+import cs455.overlay.node.Registry;
+import cs455.overlay.transport.TCPConnection;
+
 import java.io.*;
 import java.net.InetAddress;
 
@@ -36,6 +39,34 @@ public class OverlayNodeSendsRegistration implements Event {
 		marshalledBytes = baOutputStream.toByteArray();
 		baOutputStream.close();
 		dataOut.close();
+		System.out.println(marshalledBytes.length);
 		return marshalledBytes;
+	}
+
+	@Override
+	public void execute(TCPConnection con) {
+		Registry registry = Registry.get();
+		int id = -1;
+		String info;
+		if (!con.getAddress().equals(address)) {
+			info = "Error: Incorrect host address specified in registration request";
+		} else if (registry.nodeCount() >= Registry.MAXIMUM_MASSAGING_NODES) {
+			info = "Error: No more space available in registry";
+		} else {
+			id = registry.register(address, port).id;
+			if (id < 0)
+				info = "Error: Node already registered at address " +address +":" +port;
+			else
+				info = "Successfully registered with ID " +id +". The current number of messaging nodes is " +registry.nodeCount();
+		}
+//		System.out.println("Howdy all!  We've got a message from " +address +":" +port +" or " +con.getAddress() +":" +con.getPort() +"\nthe response is: " +info);
+		try {
+			con.send(new RegistryReportsRegistrationStatus(id, info));
+		} catch (IOException e) {
+			if (id > -1)
+				registry.deregister(id);
+			System.err.println("Could not send registration response");
+			e.printStackTrace();
+		}
 	}
 }
