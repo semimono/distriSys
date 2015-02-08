@@ -18,6 +18,7 @@ public class TCPConnection extends Thread {
 	private Socket socket;
 
 	public TCPConnection(Socket socket) throws IOException {
+		super("TCPConnection");
 		this.socket = socket;
 		sender = new TCPSender(socket);
 		receiver = new TCPReceiver(socket);
@@ -27,9 +28,9 @@ public class TCPConnection extends Thread {
 
 	@Override
 	public void run() {
+		System.out.println("starting TCP receiving");
 		while(!socket.isClosed()) {
 			try {
-				System.out.println("starting TCP receiving");
 				receive();
 				System.out.println("Received TCP message");
 			} catch (IOException e) {
@@ -40,8 +41,9 @@ public class TCPConnection extends Thread {
 	}
 
 	public void close() throws IOException {
+		interrupt();
 		socket.close();
-
+		TCPConnectionsCache.get().remove(this);
 	}
 
 	public TCPSender getSender() {
@@ -80,7 +82,8 @@ public class TCPConnection extends Thread {
 		baInputStream.close();
 		dataIn.close();
 
-		event.execute(this);
+		if (event != null)
+			event.execute(this);
 	}
 
 	/**

@@ -40,5 +40,10 @@ public class RegistryReportsDeregistrationStatus implements Event {
 	@Override
 	public void execute(TCPConnection con) {
 		System.out.println(info);
+		try {
+			con.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

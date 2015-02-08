@@ -6,9 +6,12 @@ import cs455.overlay.routing.RoutingTable;
 import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Cullen on 1/25/2015.
@@ -16,9 +19,9 @@ import java.util.Arrays;
 public class RegistrySendsNodeManifest implements Event {
 
 	public RoutingTable table;
-	public Integer[] nodeIds;
+	public List<Integer> nodeIds;
 
-	public RegistrySendsNodeManifest(RoutingTable table, Integer[] nodeIds) {
+	public RegistrySendsNodeManifest(RoutingTable table, List<Integer> nodeIds) {
 		this.table = table;
 		this.nodeIds = nodeIds;
 	}
@@ -35,9 +38,9 @@ public class RegistrySendsNodeManifest implements Event {
 		}
 
 		byte nodeCount = dataIn.readByte();
-		nodeIds = new Integer[nodeCount];
+		nodeIds = new ArrayList<Integer>();
 		for(int i=0; i<nodeCount; ++i)
-			nodeIds[i] = dataIn.readInt();
+			nodeIds.add(dataIn.readInt());
 	}
 
 	@Override
@@ -54,7 +57,7 @@ public class RegistrySendsNodeManifest implements Event {
 			dataOut.write(entry.address.getAddress());
 			dataOut.writeInt(entry.port);
 		}
-		dataOut.writeByte(nodeIds.length);
+		dataOut.writeByte(nodeIds.size());
 		for(int id: nodeIds)
 			dataOut.writeInt(id);
 
@@ -68,7 +71,7 @@ public class RegistrySendsNodeManifest implements Event {
 	@Override
 	public void execute(TCPConnection con) {
 		MessagingNode.get().setRoutingTable(table);
-		MessagingNode.get().setNodeIdList(Arrays.asList(nodeIds));
+		MessagingNode.get().setNodeIdList(nodeIds);
 
 		NodeReportsOverlaySetupStatus response = new NodeReportsOverlaySetupStatus(MessagingNode.get().getId(), "Successfully updated setup info");
 		try {

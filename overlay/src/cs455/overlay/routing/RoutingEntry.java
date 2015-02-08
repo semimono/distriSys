@@ -17,4 +17,8 @@ public class RoutingEntry {
 		this.port = port;
 	}
 
+	public String toString() {
+		return id +"\t" +address +":" +port;
+	}
+
 }

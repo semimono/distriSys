@@ -33,6 +33,7 @@ public class MessagingNode {
 		id = -1;
 		table = null;
 		nodeIds = null;
+		Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 		try {
 			if (host.equalsIgnoreCase("localhost"))
 				host = InetAddress.getLocalHost().getHostAddress();
@@ -55,8 +56,8 @@ public class MessagingNode {
 		commandParser = new InteractiveCommandParser(
 			""
 		);
-		commandParser.addCommand(COMMAND_PRINT_STATISTICS, new String[] {});
-		commandParser.addCommand(COMMAND_EXIT_OVERLAY, new String[] {});
+		commandParser.addCommand(COMMAND_PRINT_STATISTICS, "ps");
+		commandParser.addCommand(COMMAND_EXIT_OVERLAY, "eo");
 	}
 
 	public static MessagingNode get() {
@@ -101,14 +102,14 @@ public class MessagingNode {
 		if (command[0].equals(COMMAND_PRINT_STATISTICS)) {
 
 		} else if (command[0].equals(COMMAND_EXIT_OVERLAY)) {
-
+			System.exit(1);
 		}
 	}
 
-	@Override
-	public void finalize() throws IOException, InterruptedException {
+	public synchronized void close() throws IOException, InterruptedException {
 		if (registryCon != null && id > -1) {
 			registryCon.send(new OverlayNodeSendsDeregistration(InetAddress.getLocalHost(), server.getPort(), id));
+			registryCon.join(10000);
 		}
 		if (server != null) {
 			server.close();
@@ -141,13 +142,27 @@ public class MessagingNode {
 			showUsageAndExit();
 		}
 
+		// run
 		node = new MessagingNode(registryAddress, port);
 		node.run();
-
 	}
 
 	private static void showUsageAndExit() {
 		System.out.println("Usage: java cs455.overlay.node.MessagingNode <registry address> <registry port>");
 		System.exit(-1);
+	}
+
+	private class ShutdownHook extends Thread {
+
+		@Override
+		public void run() {
+			try {
+				MessagingNode.get().close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

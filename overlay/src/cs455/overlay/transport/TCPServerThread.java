@@ -17,6 +17,7 @@ public class TCPServerThread extends Thread {
 		this(0);
 	}
 	public TCPServerThread(int port) throws IOException {
+		super("TCPServer");
 		serverSocket = new ServerSocket(port);
 		this.port = serverSocket.getLocalPort();
 	}
@@ -35,9 +36,11 @@ public class TCPServerThread extends Thread {
 		try {
 			listen();
 		} catch (IOException e) {
-			System.err.println("TCP listening stopped erroneously");
-			e.printStackTrace();
-			return;
+			if (!interrupted()) {
+				System.err.println("TCP listening stopped erroneously");
+				e.printStackTrace();
+				return;
+			}
 		}
 		System.out.println("TCP listening stopped");
 	}
@@ -46,7 +49,7 @@ public class TCPServerThread extends Thread {
 		while (!serverSocket.isClosed()) {
 			Socket socket = serverSocket.accept();
 			new TCPConnection(socket);
-			System.out.println("Opened new connection");
+			System.out.println("Opened new TCP connection");
 		}
 	}
 }

@@ -30,4 +30,8 @@ public class Node {
 		table = null;
 	}
 
+	public String toString() {
+		return id +"\t" +address +":" +port;
+	}
+
 }

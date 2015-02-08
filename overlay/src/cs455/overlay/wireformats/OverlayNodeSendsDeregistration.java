@@ -57,13 +57,24 @@ public class OverlayNodeSendsDeregistration implements Event {
 		} else if (!address.equals(con.getAddress()) || !oldNode.address.equals(address) || oldNode.port != port) {
 			info = "Error: Incorrect host address specified in deregistration request";
 		} else {
-			registry.deregister(id);
+			try {
+				registry.deregister(id);
+			} catch (IOException e) {
+				System.err.println("Failed to deregister node " +id);
+				e.printStackTrace();
+				return;
+			}
 			info = "Deregistration successful for node id: " +id;
 		}
 		try {
 			con.send(new RegistryReportsDeregistrationStatus(info));
 		} catch (IOException e) {
 			System.err.println("Could not send deregistration response");
+			e.printStackTrace();
+		}
+		try {
+			con.close();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

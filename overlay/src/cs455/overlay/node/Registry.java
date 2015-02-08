@@ -3,8 +3,11 @@ package cs455.overlay.node;
 import cs455.overlay.routing.RoutingEntry;
 import cs455.overlay.routing.RoutingTable;
 import cs455.overlay.transport.TCPConnection;
+import cs455.overlay.transport.TCPConnectionsCache;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.InteractiveCommandParser;
+import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.RegistryRequestsTaskInitiate;
 import cs455.overlay.wireformats.RegistrySendsNodeManifest;
 
 import java.io.IOException;
@@ -16,7 +19,7 @@ import java.util.*;
  */
 public class Registry {
 
-	public static final int MAXIMUM_MASSAGING_NODES = 10;
+	public static final int MAXIMUM_MASSAGING_NODES = 128;
 
 	public static final String COMMAND_LIST_NODES = "list-messaging-nodes";
 	public static final String COMMAND_SETUP_OVERLAY = "setup-overlay";
@@ -31,6 +34,7 @@ public class Registry {
 	private TCPServerThread server;
 	private InteractiveCommandParser commandParser;
 	private boolean tablesDistributed;
+	private int nodesCompleted;
 
 
 	private Registry(int port) {
@@ -47,18 +51,16 @@ public class Registry {
 			freeIds.add(i);
 
 		// setup command parser
-		commandParser = new InteractiveCommandParser(
-			""
-		);
-		commandParser.addCommand(COMMAND_LIST_NODES, new String[] {});
-		commandParser.addCommand(COMMAND_LIST_TABLES, new String[] {});
-		commandParser.addCommand(COMMAND_SETUP_OVERLAY, new String[] {"number-of-routing-table-entries"});
-		commandParser.addCommand(COMMAND_START, new String[] {"number-of-messages"});
+		commandParser = new InteractiveCommandParser("");
+		commandParser.addCommand(COMMAND_LIST_NODES, "ln");
+		commandParser.addCommand(COMMAND_LIST_TABLES, "lt");
+		commandParser.addCommand(COMMAND_SETUP_OVERLAY, "so", new String[] {"number-of-routing-table-entries"});
+		commandParser.addCommand(COMMAND_START, "s", new String[] {"number-of-messages"});
 
 	}
 
 
-	public static Registry get() {
+	public synchronized static Registry get() {
 		if (reg == null)
 			throw new RuntimeException("Attempt to access Registry from MessagingNode");
 		return reg;
@@ -68,11 +70,15 @@ public class Registry {
 		return nodes.size();
 	}
 
-	public Node get(int id) {
+	public synchronized void addNodeComplete() {
+		++nodesCompleted;
+	}
+
+	public synchronized Node get(int id) {
 		return nodes.get(id);
 	}
 
-	public Node register(InetAddress address, int port, TCPConnection con) {
+	public synchronized Node register(InetAddress address, int port, TCPConnection con) {
 		Node node = new Node(address, port, con);
 		if (freeIds.size() < 1)
 			return node;
@@ -83,15 +89,18 @@ public class Registry {
 		node.id = freeIds.get(rand.nextInt(freeIds.size()));
 		freeIds.remove((Integer) node.id);
 		nodes.put(node.id, node);
-		tablesDistributed = false;
+		System.out.println("Registered node: " +node);
 		return node;
 	}
 
-	public void deregister(int id) throws IOException {
+	public synchronized void deregister(int id) throws IOException {
 		if (!nodes.containsKey(id))
 			return;
-		nodes.remove(id).connection.close();
+		Node node = nodes.remove(id);
 		freeIds.add(id);
+		if (node.setup)
+			tablesDistributed = false;
+		System.out.println("Deregistered node " +id);
 	}
 
 	public void nodeSetUp(int id) {
@@ -131,15 +140,24 @@ public class Registry {
 		}
 	}
 
-	private void listNodes() {
+	private synchronized void listNodes() {
 		for(Node node: nodes.values()) {
-			System.out.println(node.address +":" +node.port +" id: " +node.id);
+			System.out.println(node);
 		}
 	}
 
-	private void listTables() {
+	private synchronized void listTables() {
+		if (!tablesDistributed) {
+			System.err.println("Routing tables not built yet.  Run " +COMMAND_SETUP_OVERLAY);
+			return;
+		}
 		for(Node node: nodes.values()) {
-			
+			if (node.table == null)
+				continue;
+			System.out.println("Node " +node.id +":");
+			for(RoutingEntry entry: node.table.entries) {
+				System.out.println(entry);
+			}
 		}
 	}
 
@@ -159,19 +177,20 @@ public class Registry {
 		}
 
 		tablesDistributed = true;
-		Integer[] list = (Integer[]) nodes.keySet().toArray();
-		Arrays.sort(list);
-		for (int i=0; i<list.length; ++i) {
+		List<Integer> list = new ArrayList<Integer>(nodes.keySet());
+		Collections.sort(list);
+		for (int i=0; i<list.size(); ++i) {
 			RoutingTable table = new RoutingTable(tableSize);
 			int offset = 1;
 			for(int j=0; j<tableSize; ++j) {
-				Node targetNode = nodes.get(list[(i +offset) %list.length]);
+				Node targetNode = nodes.get(list.get((i +offset) %list.size()));
 				table.entries[j] = new RoutingEntry(targetNode.id, targetNode.address, targetNode.port);
 				offset *= 2;
 			}
 
 			RegistrySendsNodeManifest message = new RegistrySendsNodeManifest(table, list);
-			Node node = nodes.get(list[i]);
+			Node node = nodes.get(list.get(i));
+			node.setup = false;
 			node.table = table;
 			try {
 				node.connection.send(message);
@@ -183,7 +202,43 @@ public class Registry {
 	}
 
 	private void startMessaging(int messageCount) {
+		if (!tablesDistributed) {
+			System.err.println("Routing tables not built yet.  Run " +COMMAND_SETUP_OVERLAY);
+			return;
+		}
+		for(Node node: nodes.values()) {
+			if (node.table != null && !node.setup) {
+				System.err.println("Routing table not fully distributed yet.");
+				return;
+			}
+		}
+		Event request = new RegistryRequestsTaskInitiate(messageCount);
+		int nodeCount = 0;
+		synchronized (this) {
+			for (Node node : nodes.values()) {
+				if (!node.setup)
+					continue;
+				try {
+					node.connection.send(request);
+					++nodeCount;
+				} catch (IOException e) {
+					System.err.println("Failed to initiate task for node: " + node.id);
+				}
+			}
+		}
+		while(nodeCount > nodesCompleted) {
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+			}
+		}
+	}
 
+	public synchronized void close() throws IOException, InterruptedException {
+		if (server != null) {
+			server.close();
+		}
+		TCPConnectionsCache.get().close();
 	}
 
 
@@ -215,5 +270,19 @@ public class Registry {
 		System.out.println("Usage: java cs455.overlay.node.Registry <listening port>");
 		System.out.println("    the port must be a number between 1024 and 65536");
 		System.exit(-1);
+	}
+
+	private class ShutdownHook extends Thread {
+
+		@Override
+		public void run() {
+			try {
+				Registry.get().close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

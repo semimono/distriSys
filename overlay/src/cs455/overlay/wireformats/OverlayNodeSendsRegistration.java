@@ -39,7 +39,6 @@ public class OverlayNodeSendsRegistration implements Event {
 		marshalledBytes = baOutputStream.toByteArray();
 		baOutputStream.close();
 		dataOut.close();
-		System.out.println(marshalledBytes.length);
 		return marshalledBytes;
 	}
 
@@ -53,7 +52,7 @@ public class OverlayNodeSendsRegistration implements Event {
 		} else if (registry.nodeCount() >= Registry.MAXIMUM_MASSAGING_NODES) {
 			info = "Error: No more space available in registry";
 		} else {
-			id = registry.register(address, port).id;
+			id = registry.register(address, port, con).id;
 			if (id < 0)
 				info = "Error: Node already registered at address " +address +":" +port;
 			else
@@ -63,8 +62,13 @@ public class OverlayNodeSendsRegistration implements Event {
 		try {
 			con.send(new RegistryReportsRegistrationStatus(id, info));
 		} catch (IOException e) {
-			if (id > -1)
-				registry.deregister(id);
+			if (id > -1) {
+				try {
+					registry.deregister(id);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
 			System.err.println("Could not send registration response");
 			e.printStackTrace();
 		}

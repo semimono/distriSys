@@ -35,6 +35,8 @@ public class EventFactory {
 			case Protocol.OVERLAY_NODE_SENDS_REGISTRATION:
 				return new OverlayNodeSendsRegistration(dataIn);
 
+			case Protocol.NODE_REPORTS_OVERLAY_SETUP_STATUS:
+				return new NodeReportsOverlaySetupStatus(dataIn);
 			case Protocol.REGISTRY_REPORTS_DEREGISTRATION_STATUS:
 				return new RegistryReportsDeregistrationStatus(dataIn);
 			case Protocol.REGISTRY_REPORTS_REGISTRATION_STATUS:
