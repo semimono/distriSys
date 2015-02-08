@@ -43,9 +43,10 @@ public class InteractiveCommandParser {
 		for(String com: commands.keySet()) {
 			System.out.print("    " + com);
 			for(String arg: commands.get(com)) {
-				System.out.print(" " +arg);
+				System.out.print(" <" +arg +">");
 			}
 			System.out.println();
 		}
+		System.out.println();
 	}
 }

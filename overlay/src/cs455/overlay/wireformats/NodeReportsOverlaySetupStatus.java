@@ -1,5 +1,6 @@
 package cs455.overlay.wireformats;
 
+import cs455.overlay.node.Registry;
 import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
@@ -47,6 +48,6 @@ public class NodeReportsOverlaySetupStatus implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
-
+		Registry.get().nodeSetUp(status);
 	}
 }
