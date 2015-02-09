@@ -33,7 +33,8 @@ public class TCPConnectionsCache {
 	}
 
 	public synchronized void close() throws IOException {
-		for(TCPConnection con: connections)
+		Set<TCPConnection> cons = new HashSet<TCPConnection>(connections);
+		for(TCPConnection con: cons)
 			con.close();
 	}
 

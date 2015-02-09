@@ -32,7 +32,7 @@ public class TCPConnection extends Thread {
 		while(!socket.isClosed()) {
 			try {
 				receive();
-				System.out.println("Received TCP message");
+//				System.out.println("Received TCP message");
 			} catch (IOException e) {
 				System.err.println("Failed to receive message");
 				e.printStackTrace();
@@ -75,6 +75,10 @@ public class TCPConnection extends Thread {
 	private void receive() throws IOException {
 		byte[] message;
 		message = receiver.receive();
+		if (message == null) {
+			close();
+			return;
+		}
 
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(message);
 		DataInputStream dataIn = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -125,8 +129,12 @@ public class TCPConnection extends Thread {
 					byte[] data = new byte[dataLength];
 					dataIn.readFully(data, 0, dataLength);
 					return data;
-				} catch (SocketException e) {
-
+				} catch (EOFException e) {
+					System.err.println("TCP connection closed");
+					return null;
+				} catch(SocketException e) {
+					System.err.println("TCP connection closed");
+					return null;
 				}
 			}
 			return null;

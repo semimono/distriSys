@@ -165,7 +165,7 @@ public class Registry {
 				continue;
 			System.out.println("Node " +node.id +":");
 			for(RoutingEntry entry: node.table.entries) {
-				System.out.println(entry);
+				System.out.println("\t" +entry);
 			}
 		}
 	}
@@ -221,8 +221,7 @@ public class Registry {
 			return;
 		}
 		Event request = new RegistryRequestsTaskInitiate(messageCount);
-		int nodeCount = 0;
-		List<Node> nodeList = new ArrayList<Node>();;
+		List<Node> nodeList = new ArrayList<Node>();
 		synchronized (this) {
 			for (Node node : nodes.values()) {
 				if (!node.setup)
@@ -230,20 +229,26 @@ public class Registry {
 				nodeList.add(node);
 				try {
 					node.connection.send(request);
-					++nodeCount;
 				} catch (IOException e) {
 					System.err.println("Failed to initiate task for node: " + node.id);
 				}
 			}
 		}
-		System.out.println("Messaging Started");
+		System.out.println("Messaging started.");
 		for (Node node: nodeList) {
 			while (!node.completed) {
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(2000);
 				} catch (InterruptedException e) {}
 			}
+			System.out.println("Node " +node.id +" completed!");
 		}
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Messaging finished. Requesting traffic summary.");
 		for(Node node: nodeList) {
 			try {
 				node.connection.send(new RegistryRequestsTrafficSummary());
@@ -251,7 +256,31 @@ public class Registry {
 				e.printStackTrace();
 			}
 		}
-
+		System.out.println("         \t| Sent\t| Received\t| Relayed\t| Values Sent\t| Values Received");
+		int packetsSent = 0;
+		int packetsRelayed = 0;
+		int packetsReceived = 0;
+		long dataSent = 0;
+		long dataReceived = 0;
+		for (Node node: nodeList) {
+			while (node.trafficSummary == null) {
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {}
+			}
+			System.out.println(node.trafficSummary);
+			packetsSent += node.trafficSummary.packetsSent;
+			packetsReceived += node.trafficSummary.packetsReceived;
+			packetsRelayed += node.trafficSummary.packetsRelayed;
+			dataSent += node.trafficSummary.dataSent;
+			dataReceived += node.trafficSummary.dataReceived;
+		}
+		System.out.println("Sum      \t|  "
+			+packetsSent
+			+"\t|  " +packetsReceived
+			+"\t|  " +packetsRelayed
+			+"\t|  " +dataSent
+			+"\t|  " +dataReceived);
 	}
 
 	public synchronized void close() throws IOException, InterruptedException {

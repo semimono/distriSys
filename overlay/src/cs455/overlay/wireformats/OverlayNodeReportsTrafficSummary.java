@@ -1,5 +1,6 @@
 package cs455.overlay.wireformats;
 
+import cs455.overlay.node.Registry;
 import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
@@ -10,25 +11,28 @@ import java.io.*;
 public class OverlayNodeReportsTrafficSummary implements Event {
 
 
-	public int totalPacketsSent;
-	public int totalPacketsRelayed;
-	public int totalPacketsReceived;
+	public int nodeId;
+	public int packetsSent;
+	public int packetsRelayed;
+	public int packetsReceived;
 	public long dataSent;
 	public long dataReceived;
 
-	public OverlayNodeReportsTrafficSummary(int totalPacketsSent, int totalPacketsRelayed, int totalPacketsReceived, long dataSent, long dataReceived) {
-		this.totalPacketsSent = totalPacketsSent;
-		this.totalPacketsRelayed = totalPacketsRelayed;
-		this.totalPacketsReceived = totalPacketsReceived;
+	public OverlayNodeReportsTrafficSummary(int nodeId, int packetsSent, int packetsRelayed, int packetsReceived, long dataSent, long dataReceived) {
+		this.nodeId = nodeId;
+		this.packetsSent = packetsSent;
+		this.packetsRelayed = packetsRelayed;
+		this.packetsReceived = packetsReceived;
 		this.dataSent = dataSent;
 		this.dataReceived = dataReceived;
 	}
 
 	public OverlayNodeReportsTrafficSummary(DataInputStream dataIn) throws IOException {
-		totalPacketsSent = dataIn.readInt();
-		totalPacketsRelayed = dataIn.readInt();
+		nodeId = dataIn.readInt();
+		packetsSent = dataIn.readInt();
+		packetsRelayed = dataIn.readInt();
 		dataSent = dataIn.readLong();
-		totalPacketsReceived = dataIn.readInt();
+		packetsReceived = dataIn.readInt();
 		dataReceived = dataIn.readLong();
 	}
 
@@ -39,10 +43,11 @@ public class OverlayNodeReportsTrafficSummary implements Event {
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
 		dataOut.writeByte(Protocol.OVERLAY_NODE_REPORTS_TRAFFIC_SUMMARY);
-		dataOut.writeInt(totalPacketsSent);
-		dataOut.writeInt(totalPacketsRelayed);
+		dataOut.writeInt(nodeId);
+		dataOut.writeInt(packetsSent);
+		dataOut.writeInt(packetsRelayed);
 		dataOut.writeLong(dataSent);
-		dataOut.writeInt(totalPacketsReceived);
+		dataOut.writeInt(packetsReceived);
 		dataOut.writeLong(dataReceived);
 
 		dataOut.flush();
@@ -54,6 +59,16 @@ public class OverlayNodeReportsTrafficSummary implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
+		Registry.get().get(nodeId).trafficSummary = this;
+	}
 
+	@Override
+	public String toString() {
+		return "Node " +nodeId
+			+"  \t|  " +packetsSent
+			+"\t|  " +packetsReceived
+			+"\t|  " +packetsRelayed
+			+"\t|  " +dataSent
+			+"\t|  " +dataReceived;
 	}
 }

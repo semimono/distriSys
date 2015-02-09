@@ -10,14 +10,14 @@ import java.io.*;
  */
 public class RegistryRequestsTaskInitiate implements Event {
 
-	public int packetCount;
+	public int messageCount;
 
 	public RegistryRequestsTaskInitiate(int packetCount) {
-		this.packetCount = packetCount;
+		this.messageCount = packetCount;
 	}
 
 	public RegistryRequestsTaskInitiate(DataInputStream dataIn) throws IOException {
-		packetCount = dataIn.readInt();
+		messageCount = dataIn.readInt();
 	}
 
 	@Override
@@ -27,7 +27,7 @@ public class RegistryRequestsTaskInitiate implements Event {
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
 		dataOut.writeByte(Protocol.REGISTRY_REQUESTS_TASK_INITIATE);
-		dataOut.writeInt(packetCount);
+		dataOut.writeInt(messageCount);
 
 		dataOut.flush();
 		marshalledBytes = baOutputStream.toByteArray();
@@ -38,6 +38,11 @@ public class RegistryRequestsTaskInitiate implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
-		MessagingNode.get();
+		MessagingNode.get().startMessaging(messageCount);
+		try {
+			con.send(new OverlayNodeReportsTaskFinished(MessagingNode.get().getId()));
+		} catch (IOException e) {
+			System.err.println("Failed to report task finished to registry.");
+		}
 	}
 }

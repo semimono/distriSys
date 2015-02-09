@@ -2,6 +2,7 @@ package cs455.overlay.node;
 
 import cs455.overlay.routing.RoutingTable;
 import cs455.overlay.transport.TCPConnection;
+import cs455.overlay.wireformats.OverlayNodeReportsTrafficSummary;
 
 import java.net.InetAddress;
 
@@ -17,6 +18,7 @@ public class Node {
 	public RoutingTable table;
 	public boolean setup;
 	public boolean completed;
+	public OverlayNodeReportsTrafficSummary trafficSummary;
 
 	public Node(InetAddress address, int port, TCPConnection con) {
 		this(address, port, con, -1);
@@ -30,6 +32,7 @@ public class Node {
 		setup = false;
 		completed = false;
 		table = null;
+		trafficSummary = null;
 	}
 
 	public String toString() {

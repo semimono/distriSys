@@ -4,6 +4,8 @@ import cs455.overlay.node.MessagingNode;
 import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Cullen on 1/25/2015.
@@ -14,9 +16,13 @@ public class OverlayNodeSendsData implements Event {
 	public int sourceId;
 	public int payload;
 
-	public int[] nodeTrace;
+	public List<Integer> nodeTrace;
 
-	public OverlayNodeSendsData(int destinationId, int sourceId, int payload, int[] nodeTrace) {
+	public OverlayNodeSendsData(int destinationId, int sourceId, int payload) {
+		this(destinationId, sourceId, payload, new ArrayList<Integer>());
+	}
+
+	public OverlayNodeSendsData(int destinationId, int sourceId, int payload, List<Integer> nodeTrace) {
 		this.destinationId = destinationId;
 		this.sourceId = sourceId;
 		this.payload = payload;
@@ -27,9 +33,10 @@ public class OverlayNodeSendsData implements Event {
 		destinationId = dataIn.readInt();
 		sourceId = dataIn.readInt();
 		payload = dataIn.readInt();
-		nodeTrace = new int[dataIn.readInt()];
-		for(int i=0; i<nodeTrace.length; ++i)
-			nodeTrace[i] = dataIn.readInt();
+		int traceSize = dataIn.readInt();
+		nodeTrace = new ArrayList<Integer>(traceSize);
+		for(int i=0; i<traceSize; ++i)
+			nodeTrace.add(dataIn.readInt());
 	}
 
 	@Override
@@ -42,7 +49,7 @@ public class OverlayNodeSendsData implements Event {
 		dataOut.writeInt(destinationId);
 		dataOut.writeInt(sourceId);
 		dataOut.writeInt(payload);
-		dataOut.writeInt(nodeTrace.length);
+		dataOut.writeInt(nodeTrace.size());
 		for(int id: nodeTrace)
 			dataOut.writeInt(id);
 

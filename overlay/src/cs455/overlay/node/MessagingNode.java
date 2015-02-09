@@ -1,5 +1,6 @@
 package cs455.overlay.node;
 
+import cs455.overlay.routing.RoutingEntry;
 import cs455.overlay.routing.RoutingTable;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPConnectionsCache;
@@ -11,6 +12,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by Cullen on 1/22/2015.
@@ -83,8 +85,22 @@ public class MessagingNode {
 		this.id = id;
 	}
 
-	public void setRoutingTable(RoutingTable newTable) {
+	public synchronized void setRoutingTable(RoutingTable newTable) throws IOException {
+		if (table != null) {
+			for (RoutingEntry entry: table.entries) {
+				if (entry.conn != null) {
+					try {
+						entry.conn.close();
+					} catch (IOException e) {
+						System.err.println("Failed to close old TCP connection");
+					}
+				}
+			}
+		}
 		this.table = newTable;
+		for(RoutingEntry entry: table.entries) {
+			entry.conn = new TCPConnection(new Socket(entry.address, entry.port));
+		}
 	}
 
 	public void setNodeIdList(List<Integer> nodeIds) {
@@ -93,20 +109,61 @@ public class MessagingNode {
 	}
 
 	public OverlayNodeReportsTrafficSummary getTraffixSummary() {
-		return new OverlayNodeReportsTrafficSummary(totalPacketsSent, totalPacketsRelayed, totalPacketsReceived, dataSent, dataReceived);
+		return new OverlayNodeReportsTrafficSummary(id, totalPacketsSent, totalPacketsRelayed, totalPacketsReceived, dataSent, dataReceived);
 	}
 
 	public void receiveMessage(OverlayNodeSendsData message) {
 		if (message.destinationId == id) {
-			++totalPacketsReceived;
-			dataReceived += message.payload;
-		} else {
+			synchronized(this) {
+				++totalPacketsReceived;
+				dataReceived += message.payload;
+				System.out.print(message.sourceId);
+				for(int nodeId: message.nodeTrace)
+					System.out.print(" " +nodeId);
 
+				System.out.println(" " +message.destinationId);
+			}
+		} else {
+//			if (message.nodeTrace.size() == 10) {
+//				System.out.print(message.sourceId);
+//				for(int nodeId: message.nodeTrace)
+//					System.out.print(" " +nodeId);
+//				System.out.println("   " +message.destinationId);
+//			}
+			message.nodeTrace.add(id);
+			sendMessage(message);
+			synchronized(this) {
+				++totalPacketsRelayed;
+			}
 		}
 	}
 
-	public void sendMessage(OverlayNodeSendsData message) {
+	public synchronized void sendMessage(OverlayNodeSendsData message) {
+		// find node to send to
+		boolean lessThan = message.destinationId < id;
+		int bestOption = 0;
+		for(int i=0; i<table.entries.length; ++i) {
+			if (lessThan) {
+				if (table.entries[i].id > id || table.entries[i].id <= message.destinationId) {
+					bestOption = i;
+				} else {
+					break;
+				}
+			} else {
+				if (table.entries[i].id > id && table.entries[i].id <= message.destinationId) {
+					bestOption = i;
+				} else {
+					break;
+				}
+			}
+		}
 
+		// send message
+		try {
+			table.entries[bestOption].conn.send(message);
+		} catch (IOException e) {
+			System.err.println("Failed to send message to " +table.entries[bestOption].id);
+		}
 	}
 
 	public void startMessaging(int messageCount) {
@@ -117,8 +174,18 @@ public class MessagingNode {
 		dataSent = 0;
 		dataReceived = 0;
 
+		Random rand = new Random();
+		System.out.println("Started sending messages.");
 		for(int i=0; i<messageCount; ++i) {
-
+			int destId = nodeIds.get(rand.nextInt(nodeIds.size()));
+			int payload = rand.nextInt();
+			System.out.println(id +"->" +destId);
+			OverlayNodeSendsData message = new OverlayNodeSendsData(destId, id, payload);
+			sendMessage(message);
+			synchronized (this) {
+				++totalPacketsSent;
+				dataSent += payload;
+			}
 		}
 	}
 

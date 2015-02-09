@@ -70,10 +70,18 @@ public class RegistrySendsNodeManifest implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
-		MessagingNode.get().setRoutingTable(table);
+		int status = MessagingNode.get().getId();
+		String message = "Successfully updated setup info";
+		try {
+			MessagingNode.get().setRoutingTable(table);
+		} catch (IOException e) {
+			status = -1;
+			message = "Failed to initiate connection routing";
+			System.err.println(message);
+		}
 		MessagingNode.get().setNodeIdList(nodeIds);
 
-		NodeReportsOverlaySetupStatus response = new NodeReportsOverlaySetupStatus(MessagingNode.get().getId(), "Successfully updated setup info");
+		NodeReportsOverlaySetupStatus response = new NodeReportsOverlaySetupStatus(status, message);
 		try {
 			con.send(response);
 		} catch (IOException e) {
