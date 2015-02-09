@@ -1,5 +1,6 @@
 package cs455.overlay.wireformats;
 
+import cs455.overlay.node.Registry;
 import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
@@ -9,11 +10,14 @@ import java.io.*;
  */
 public class OverlayNodeReportsTaskFinished implements Event {
 
+	public int nodeId;
 
-	public OverlayNodeReportsTaskFinished() {
+	public OverlayNodeReportsTaskFinished(int nodeId) {
+		this.nodeId = nodeId;
 	}
 
 	public OverlayNodeReportsTaskFinished(DataInputStream dataIn) throws IOException {
+		nodeId = dataIn.readInt();
 	}
 
 	@Override
@@ -23,6 +27,7 @@ public class OverlayNodeReportsTaskFinished implements Event {
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
 		dataOut.writeByte(Protocol.OVERLAY_NODE_REPORTS_TASK_FINISHED);
+		dataOut.writeInt(nodeId);
 
 		dataOut.flush();
 		marshalledBytes = baOutputStream.toByteArray();
@@ -33,6 +38,8 @@ public class OverlayNodeReportsTaskFinished implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
-
+		synchronized (Registry.get()) {
+			Registry.get().get(nodeId).completed = true;
+		}
 	}
 }

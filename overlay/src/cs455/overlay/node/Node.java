@@ -16,6 +16,7 @@ public class Node {
 	public TCPConnection connection;
 	public RoutingTable table;
 	public boolean setup;
+	public boolean completed;
 
 	public Node(InetAddress address, int port, TCPConnection con) {
 		this(address, port, con, -1);
@@ -27,6 +28,7 @@ public class Node {
 		this.id = id;
 		connection = con;
 		setup = false;
+		completed = false;
 		table = null;
 	}
 

@@ -8,6 +8,7 @@ import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.InteractiveCommandParser;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.RegistryRequestsTaskInitiate;
+import cs455.overlay.wireformats.RegistryRequestsTrafficSummary;
 import cs455.overlay.wireformats.RegistrySendsNodeManifest;
 
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class Registry {
 		rand = new Random();
 		nodes = new TreeMap<Integer, Node>();
 		freeIds = new LinkedList<Integer>();
+		Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 		for(int i=0; i<MAXIMUM_MASSAGING_NODES; ++i)
 			freeIds.add(i);
 
@@ -57,8 +59,9 @@ public class Registry {
 		commandParser.addCommand(COMMAND_SETUP_OVERLAY, "so", new String[] {"number-of-routing-table-entries"});
 		commandParser.addCommand(COMMAND_START, "s", new String[] {"number-of-messages"});
 
-	}
 
+
+	}
 
 	public synchronized static Registry get() {
 		if (reg == null)
@@ -214,10 +217,12 @@ public class Registry {
 		}
 		Event request = new RegistryRequestsTaskInitiate(messageCount);
 		int nodeCount = 0;
+		List<Node> nodeList = new ArrayList<Node>();;
 		synchronized (this) {
 			for (Node node : nodes.values()) {
 				if (!node.setup)
 					continue;
+				nodeList.add(node);
 				try {
 					node.connection.send(request);
 					++nodeCount;
@@ -226,12 +231,22 @@ public class Registry {
 				}
 			}
 		}
-		while(nodeCount > nodesCompleted) {
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
+		System.out.println("Messaging Started");
+		for (Node node: nodeList) {
+			while (!node.completed) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {}
 			}
 		}
+		for(Node node: nodeList) {
+			try {
+				node.connection.send(new RegistryRequestsTrafficSummary());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	public synchronized void close() throws IOException, InterruptedException {
