@@ -238,13 +238,13 @@ public class Registry {
 		for (Node node: nodeList) {
 			while (!node.completed) {
 				try {
-					Thread.sleep(2000);
+					Thread.sleep(1000);
 				} catch (InterruptedException e) {}
 			}
-			System.out.println("Node " +node.id +" completed!");
+//			System.out.println("Node " +node.id +" completed!");
 		}
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(2000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -256,6 +256,7 @@ public class Registry {
 				e.printStackTrace();
 			}
 		}
+		overlayReady = false;
 		System.out.println("         \t| Sent\t| Received\t| Relayed\t| Values Sent\t| Values Received");
 		int packetsSent = 0;
 		int packetsRelayed = 0;
@@ -265,9 +266,10 @@ public class Registry {
 		for (Node node: nodeList) {
 			while (node.trafficSummary == null) {
 				try {
-					Thread.sleep(2000);
+					Thread.sleep(1000);
 				} catch (InterruptedException e) {}
 			}
+			node.setup = false;
 			System.out.println(node.trafficSummary);
 			packetsSent += node.trafficSummary.packetsSent;
 			packetsReceived += node.trafficSummary.packetsReceived;

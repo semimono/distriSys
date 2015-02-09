@@ -42,11 +42,11 @@ public class MessagingNode {
 		id = -1;
 		table = null;
 		nodeIds = null;
+
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 		try {
 			if (host.equalsIgnoreCase("localhost"))
 				host = InetAddress.getLocalHost().getHostAddress();
-			System.out.println(host);
 			Socket socket = new Socket(host, port);
 			registryCon = new TCPConnection(socket);
 		} catch (IOException e) {
@@ -101,6 +101,15 @@ public class MessagingNode {
 		for(RoutingEntry entry: table.entries) {
 			entry.conn = new TCPConnection(new Socket(entry.address, entry.port));
 		}
+		resetStatistics();
+	}
+
+	public void resetStatistics() {
+		totalPacketsSent = 0;
+		totalPacketsRelayed = 0;
+		totalPacketsReceived = 0;
+		dataSent = 0;
+		dataReceived = 0;
 	}
 
 	public void setNodeIdList(List<Integer> nodeIds) {
@@ -117,19 +126,8 @@ public class MessagingNode {
 			synchronized(this) {
 				++totalPacketsReceived;
 				dataReceived += message.payload;
-				System.out.print(message.sourceId);
-				for(int nodeId: message.nodeTrace)
-					System.out.print(" " +nodeId);
-
-				System.out.println(" " +message.destinationId);
 			}
 		} else {
-//			if (message.nodeTrace.size() == 10) {
-//				System.out.print(message.sourceId);
-//				for(int nodeId: message.nodeTrace)
-//					System.out.print(" " +nodeId);
-//				System.out.println("   " +message.destinationId);
-//			}
 			message.nodeTrace.add(id);
 			sendMessage(message);
 			synchronized(this) {
@@ -138,7 +136,7 @@ public class MessagingNode {
 		}
 	}
 
-	public synchronized void sendMessage(OverlayNodeSendsData message) {
+	public void sendMessage(OverlayNodeSendsData message) {
 		// find node to send to
 		boolean lessThan = message.destinationId < id;
 		int bestOption = 0;
@@ -167,19 +165,11 @@ public class MessagingNode {
 	}
 
 	public void startMessaging(int messageCount) {
-		// reset statistics
-		totalPacketsSent = 0;
-		totalPacketsRelayed = 0;
-		totalPacketsReceived = 0;
-		dataSent = 0;
-		dataReceived = 0;
-
 		Random rand = new Random();
 		System.out.println("Started sending messages.");
 		for(int i=0; i<messageCount; ++i) {
 			int destId = nodeIds.get(rand.nextInt(nodeIds.size()));
 			int payload = rand.nextInt();
-			System.out.println(id +"->" +destId);
 			OverlayNodeSendsData message = new OverlayNodeSendsData(destId, id, payload);
 			sendMessage(message);
 			synchronized (this) {
