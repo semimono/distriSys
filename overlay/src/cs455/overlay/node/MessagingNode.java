@@ -29,6 +29,13 @@ public class MessagingNode {
 	private RoutingTable table;
 	private List<Integer> nodeIds;
 
+	// messaging statistics
+	private int totalPacketsSent;
+	private int totalPacketsRelayed;
+	private int totalPacketsReceived;
+	private long dataSent;
+	private long dataReceived;
+
 	private MessagingNode(String host, int port) throws UnknownHostException {
 		id = -1;
 		table = null;
@@ -83,6 +90,36 @@ public class MessagingNode {
 	public void setNodeIdList(List<Integer> nodeIds) {
 		this.nodeIds = nodeIds;
 		this.nodeIds.remove((Integer)id);
+	}
+
+	public OverlayNodeReportsTrafficSummary getTraffixSummary() {
+		return new OverlayNodeReportsTrafficSummary(totalPacketsSent, totalPacketsRelayed, totalPacketsReceived, dataSent, dataReceived);
+	}
+
+	public void receiveMessage(OverlayNodeSendsData message) {
+		if (message.destinationId == id) {
+			++totalPacketsReceived;
+			dataReceived += message.payload;
+		} else {
+
+		}
+	}
+
+	public void sendMessage(OverlayNodeSendsData message) {
+
+	}
+
+	public void startMessaging(int messageCount) {
+		// reset statistics
+		totalPacketsSent = 0;
+		totalPacketsRelayed = 0;
+		totalPacketsReceived = 0;
+		dataSent = 0;
+		dataReceived = 0;
+
+		for(int i=0; i<messageCount; ++i) {
+
+		}
 	}
 
 	private void run() throws IOException {

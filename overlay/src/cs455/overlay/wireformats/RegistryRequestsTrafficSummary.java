@@ -1,5 +1,6 @@
 package cs455.overlay.wireformats;
 
+import cs455.overlay.node.MessagingNode;
 import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
@@ -33,6 +34,11 @@ public class RegistryRequestsTrafficSummary implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
-
+		Event summary = MessagingNode.get().getTraffixSummary();
+		try {
+			con.send(summary);
+		} catch (IOException e) {
+			System.err.println("Failed to send traffic summary to registry");
+		}
 	}
 }

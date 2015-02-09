@@ -35,7 +35,7 @@ public class Registry {
 	private TCPServerThread server;
 	private InteractiveCommandParser commandParser;
 	private boolean tablesDistributed;
-	private int nodesCompleted;
+	private boolean overlayReady;
 
 
 	private Registry(int port) {
@@ -48,6 +48,8 @@ public class Registry {
 		rand = new Random();
 		nodes = new TreeMap<Integer, Node>();
 		freeIds = new LinkedList<Integer>();
+		tablesDistributed = false;
+		overlayReady = false;
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 		for(int i=0; i<MAXIMUM_MASSAGING_NODES; ++i)
 			freeIds.add(i);
@@ -71,10 +73,6 @@ public class Registry {
 
 	public int nodeCount() {
 		return nodes.size();
-	}
-
-	public synchronized void addNodeComplete() {
-		++nodesCompleted;
 	}
 
 	public synchronized Node get(int id) {
@@ -108,13 +106,21 @@ public class Registry {
 
 	public void nodeSetUp(int id) {
 		if (id < 0) {
-			System.err.println("Overlay");
+			System.err.println("Overlay node failed to setup routing connections");
 		}
 		Node node = nodes.get(id);
 		if (node == null)
-			System.err.println("Received overlay setup response from unknown messaging node");
+			System.err.println("Received overlay setup response from unknown messaging node.");
 		else
 			node.setup = true;
+		synchronized(this) {
+			for(Node n: nodes.values()) {
+				if (n.table != null && !n.setup)
+					return;
+			}
+			overlayReady = true;
+		}
+		System.out.println("Registry now ready to initiate tasks.");
 	}
 
 
@@ -180,6 +186,7 @@ public class Registry {
 		}
 
 		tablesDistributed = true;
+		overlayReady = false;
 		List<Integer> list = new ArrayList<Integer>(nodes.keySet());
 		Collections.sort(list);
 		for (int i=0; i<list.size(); ++i) {
@@ -209,11 +216,9 @@ public class Registry {
 			System.err.println("Routing tables not built yet.  Run " +COMMAND_SETUP_OVERLAY);
 			return;
 		}
-		for(Node node: nodes.values()) {
-			if (node.table != null && !node.setup) {
-				System.err.println("Routing table not fully distributed yet.");
-				return;
-			}
+		if (!overlayReady) {
+			System.err.println("Routing table not fully distributed yet.");
+			return;
 		}
 		Event request = new RegistryRequestsTaskInitiate(messageCount);
 		int nodeCount = 0;
