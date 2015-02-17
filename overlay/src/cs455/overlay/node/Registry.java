@@ -6,6 +6,7 @@ import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPConnectionsCache;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.InteractiveCommandParser;
+import cs455.overlay.util.StatisticsCollectorAndDisplay;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.RegistryRequestsTaskInitiate;
 import cs455.overlay.wireformats.RegistryRequestsTrafficSummary;
@@ -227,6 +228,7 @@ public class Registry {
 				if (!node.setup)
 					continue;
 				nodeList.add(node);
+				node.trafficSummary = null;
 				try {
 					node.connection.send(request);
 				} catch (IOException e) {
@@ -241,7 +243,6 @@ public class Registry {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {}
 			}
-//			System.out.println("Node " +node.id +" completed!");
 		}
 		try {
 			Thread.sleep(2000);
@@ -257,12 +258,13 @@ public class Registry {
 			}
 		}
 		overlayReady = false;
-		System.out.println("         \t| Sent\t| Received\t| Relayed\t| Values Sent\t| Values Received");
-		int packetsSent = 0;
-		int packetsRelayed = 0;
-		int packetsReceived = 0;
-		long dataSent = 0;
-		long dataReceived = 0;
+//		System.out.println("         \t| Sent\t| Received\t| Relayed\t| Values Sent\t| Values Received");
+//		int packetsSent = 0;
+//		int packetsRelayed = 0;
+//		int packetsReceived = 0;
+//		long dataSent = 0;
+//		long dataReceived = 0;
+		StatisticsCollectorAndDisplay stats = new StatisticsCollectorAndDisplay();
 		for (Node node: nodeList) {
 			while (node.trafficSummary == null) {
 				try {
@@ -270,19 +272,21 @@ public class Registry {
 				} catch (InterruptedException e) {}
 			}
 			node.setup = false;
-			System.out.println(node.trafficSummary);
-			packetsSent += node.trafficSummary.packetsSent;
-			packetsReceived += node.trafficSummary.packetsReceived;
-			packetsRelayed += node.trafficSummary.packetsRelayed;
-			dataSent += node.trafficSummary.dataSent;
-			dataReceived += node.trafficSummary.dataReceived;
+			stats.addStat(node);
+//			System.out.println(node.trafficSummary);
+//			packetsSent += node.trafficSummary.packetsSent;
+//			packetsReceived += node.trafficSummary.packetsReceived;
+//			packetsRelayed += node.trafficSummary.packetsRelayed;
+//			dataSent += node.trafficSummary.dataSent;
+//			dataReceived += node.trafficSummary.dataReceived;
 		}
-		System.out.println("Sum      \t|  "
-			+packetsSent
-			+"\t|  " +packetsReceived
-			+"\t|  " +packetsRelayed
-			+"\t|  " +dataSent
-			+"\t|  " +dataReceived);
+		stats.print();
+//		System.out.println("Sum      \t|  "
+//			+packetsSent
+//			+"\t|  " +packetsReceived
+//			+"\t|  " +packetsRelayed
+//			+"\t|  " +dataSent
+//			+"\t|  " +dataReceived);
 	}
 
 	public synchronized void close() throws IOException, InterruptedException {

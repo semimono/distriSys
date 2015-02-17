@@ -61,14 +61,4 @@ public class OverlayNodeReportsTrafficSummary implements Event {
 	public void execute(TCPConnection con) {
 		Registry.get().get(nodeId).trafficSummary = this;
 	}
-
-	@Override
-	public String toString() {
-		return "Node " +nodeId
-			+"  \t|  " +packetsSent
-			+"\t|  " +packetsReceived
-			+"\t|  " +packetsRelayed
-			+"\t|  " +dataSent
-			+"\t|  " +dataReceived;
-	}
 }
