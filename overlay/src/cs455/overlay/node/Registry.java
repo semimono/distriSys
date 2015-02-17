@@ -27,6 +27,7 @@ public class Registry {
 	public static final String COMMAND_SETUP_OVERLAY = "setup-overlay";
 	public static final String COMMAND_LIST_TABLES = "list-routing-tables";
 	public static final String COMMAND_START = "start";
+	public static final long TRAFFIC_REQUEST_DELAY_MILLIS = 2000;
 
 	private static Registry reg = null;
 
@@ -144,9 +145,17 @@ public class Registry {
 		} else if (command[0].equals(COMMAND_LIST_TABLES)) {
 			listTables();
 		} else if (command[0].equals(COMMAND_SETUP_OVERLAY)) {
-			setupOverlay(Integer.parseInt(command[1]));
+			try {
+				setupOverlay(Integer.parseInt(command[1]));
+			} catch (NumberFormatException e) {
+				System.err.println("Must provide number as parameter to command " +command[0] +".");
+			}
 		} else if (command[0].equals(COMMAND_START)) {
-			startMessaging(Integer.parseInt(command[1]));
+			try {
+				startMessaging(Integer.parseInt(command[1]));
+			} catch (NumberFormatException e) {
+				System.err.println("Must provide number as parameter to command " +command[0] +".");
+			}
 		}
 	}
 
@@ -229,6 +238,7 @@ public class Registry {
 					continue;
 				nodeList.add(node);
 				node.trafficSummary = null;
+				node.completed = false;
 				try {
 					node.connection.send(request);
 				} catch (IOException e) {
@@ -245,7 +255,7 @@ public class Registry {
 			}
 		}
 		try {
-			Thread.sleep(2000);
+			Thread.sleep(TRAFFIC_REQUEST_DELAY_MILLIS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -257,7 +267,7 @@ public class Registry {
 				e.printStackTrace();
 			}
 		}
-		overlayReady = false;
+//		overlayReady = false;
 //		System.out.println("         \t| Sent\t| Received\t| Relayed\t| Values Sent\t| Values Received");
 //		int packetsSent = 0;
 //		int packetsRelayed = 0;
@@ -271,8 +281,8 @@ public class Registry {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {}
 			}
-			node.setup = false;
-			stats.addStat(node);
+//			node.setup = false;
+			stats.addStat(node.trafficSummary, node.id);
 //			System.out.println(node.trafficSummary);
 //			packetsSent += node.trafficSummary.packetsSent;
 //			packetsReceived += node.trafficSummary.packetsReceived;

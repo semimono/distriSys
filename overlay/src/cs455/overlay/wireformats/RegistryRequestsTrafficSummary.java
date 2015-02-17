@@ -34,7 +34,8 @@ public class RegistryRequestsTrafficSummary implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
-		Event summary = MessagingNode.get().getTraffixSummary();
+		Event summary = MessagingNode.get().getTrafficSummary();
+		MessagingNode.get().resetStatistics();
 		try {
 			con.send(summary);
 		} catch (IOException e) {

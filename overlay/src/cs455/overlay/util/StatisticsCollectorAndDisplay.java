@@ -1,9 +1,12 @@
 package cs455.overlay.util;
 
 import cs455.overlay.node.Node;
+import cs455.overlay.wireformats.OverlayNodeReportsTrafficSummary;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * Created by Cullen on 1/25/2015.
@@ -18,7 +21,7 @@ public class StatisticsCollectorAndDisplay {
 	private long dataSent;
 	private long dataReceived;
 	private int[] fieldLengths;
-	private List<Node> nodes;
+	private SortedMap<Integer, OverlayNodeReportsTrafficSummary> nodes;
 
 	public StatisticsCollectorAndDisplay() {
 		fieldLengths = new int[] {header[0].length(),
@@ -27,22 +30,27 @@ public class StatisticsCollectorAndDisplay {
 			header[3].length(),
 			header[4].length(),
 			header[5].length()};
-		nodes = new ArrayList<Node>();
+		nodes = new TreeMap<Integer, OverlayNodeReportsTrafficSummary>();
 	}
 
-	public void addStat(Node node) {
-		setLength(0, s(node.id).length());
-		packetsSent += node.trafficSummary.packetsSent;
+	public void addStat(OverlayNodeReportsTrafficSummary trafficSummary, int id) {
+		setLength(0, s(id).length());
+		packetsSent += trafficSummary.packetsSent;
 		setLength(1, s(packetsSent).length());
-		packetsReceived += node.trafficSummary.packetsReceived;
+		setLength(1, s(trafficSummary.packetsSent).length());
+		packetsReceived += trafficSummary.packetsReceived;
 		setLength(2, s(packetsReceived).length());
-		packetsRelayed += node.trafficSummary.packetsRelayed;
+		setLength(2, s(trafficSummary.packetsReceived).length());
+		packetsRelayed += trafficSummary.packetsRelayed;
 		setLength(3, s(packetsRelayed).length());
-		dataSent += node.trafficSummary.dataSent;
+		setLength(3, s(trafficSummary.packetsRelayed).length());
+		dataSent += trafficSummary.dataSent;
 		setLength(4, s(dataSent).length());
-		dataReceived += node.trafficSummary.dataReceived;
+		setLength(4, s(trafficSummary.dataSent).length());
+		dataReceived += trafficSummary.dataReceived;
 		setLength(5, s(dataReceived).length());
-		nodes.add(node);
+		setLength(5, s(trafficSummary.dataReceived).length());
+		nodes.put(id, trafficSummary);
 	}
 
 	public String header() {
@@ -54,19 +62,22 @@ public class StatisticsCollectorAndDisplay {
 
 	public void print() {
 		System.out.println(header());
-		for(Node n: nodes) {
-			System.out.println(getNode(n));
+		for(int id: nodes.keySet()) {
+			System.out.println(getNode(id));
 		}
 		System.out.println(summary());
 	}
 
-	public String getNode(Node node) {
-		return "Node " + pad(s(node.id), fieldLengths[0]) +" | "
-			+printValues(s(node.trafficSummary.packetsSent),
-				s(node.trafficSummary.packetsReceived),
-				s(node.trafficSummary.packetsRelayed),
-				s(node.trafficSummary.dataSent),
-				s(node.trafficSummary.dataReceived));
+	public String getNode(int node) {
+		OverlayNodeReportsTrafficSummary trafficSummary = nodes.get(node);
+		if (trafficSummary == null)
+			return "";
+		return "Node " + pad(s(node), fieldLengths[0]) +" | "
+			+printValues(s(trafficSummary.packetsSent),
+				s(trafficSummary.packetsReceived),
+				s(trafficSummary.packetsRelayed),
+				s(trafficSummary.dataSent),
+				s(trafficSummary.dataReceived));
 	}
 
 	public String summary() {

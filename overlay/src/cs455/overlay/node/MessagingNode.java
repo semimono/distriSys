@@ -6,6 +6,7 @@ import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPConnectionsCache;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.InteractiveCommandParser;
+import cs455.overlay.util.StatisticsCollectorAndDisplay;
 import cs455.overlay.wireformats.*;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -21,6 +22,7 @@ public class MessagingNode {
 
 	private static MessagingNode node = null;
 
+	private static final long MESSAGING_FINISHED_DELAY_MILLIS = 3000;
 	private static final String COMMAND_PRINT_STATISTICS = "print-counters-and-diagnostics";
 	private static final String COMMAND_EXIT_OVERLAY = "exit-overlay";
 
@@ -30,6 +32,7 @@ public class MessagingNode {
 	private InteractiveCommandParser commandParser;
 	private RoutingTable table;
 	private List<Integer> nodeIds;
+	private long lastReceived;
 
 	// messaging statistics
 	private int totalPacketsSent;
@@ -42,6 +45,7 @@ public class MessagingNode {
 		id = -1;
 		table = null;
 		nodeIds = null;
+		lastReceived = 0;
 
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 		try {
@@ -117,11 +121,13 @@ public class MessagingNode {
 		this.nodeIds.remove((Integer)id);
 	}
 
-	public OverlayNodeReportsTrafficSummary getTraffixSummary() {
-		return new OverlayNodeReportsTrafficSummary(id, totalPacketsSent, totalPacketsRelayed, totalPacketsReceived, dataSent, dataReceived);
+	public OverlayNodeReportsTrafficSummary getTrafficSummary() {
+		OverlayNodeReportsTrafficSummary e = new OverlayNodeReportsTrafficSummary(id, totalPacketsSent, totalPacketsRelayed, totalPacketsReceived, dataSent, dataReceived);
+		return e;
 	}
 
 	public void receiveMessage(OverlayNodeSendsData message) {
+		lastReceived = System.currentTimeMillis();
 		if (message.destinationId == id) {
 			synchronized(this) {
 				++totalPacketsReceived;
@@ -172,9 +178,15 @@ public class MessagingNode {
 			int payload = rand.nextInt();
 			OverlayNodeSendsData message = new OverlayNodeSendsData(destId, id, payload);
 			sendMessage(message);
-			synchronized (this) {
-				++totalPacketsSent;
-				dataSent += payload;
+			++totalPacketsSent;
+			dataSent += payload;
+		}
+		lastReceived = System.currentTimeMillis();
+		while(lastReceived + MESSAGING_FINISHED_DELAY_MILLIS > System.currentTimeMillis()) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				break;
 			}
 		}
 	}
@@ -194,10 +206,17 @@ public class MessagingNode {
 		if (command == null || command.length < 1)
 			return;
 		if (command[0].equals(COMMAND_PRINT_STATISTICS)) {
-
+			printStats();
 		} else if (command[0].equals(COMMAND_EXIT_OVERLAY)) {
 			System.exit(1);
 		}
+	}
+
+	public void printStats() {
+		StatisticsCollectorAndDisplay stats = new StatisticsCollectorAndDisplay();
+		stats.addStat(getTrafficSummary(), id);
+		System.out.println(stats.header());
+		System.out.println(stats.getNode(id));
 	}
 
 	public synchronized void close() throws IOException, InterruptedException {
