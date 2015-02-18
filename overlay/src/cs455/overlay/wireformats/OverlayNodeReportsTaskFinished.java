@@ -4,6 +4,7 @@ import cs455.overlay.node.Registry;
 import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
+import java.net.InetAddress;
 
 /**
  * Created by Cullen on 1/25/2015.
@@ -11,12 +12,18 @@ import java.io.*;
 public class OverlayNodeReportsTaskFinished implements Event {
 
 	public int nodeId;
+	public InetAddress address;
+	public int port;
 
-	public OverlayNodeReportsTaskFinished(int nodeId) {
+	public OverlayNodeReportsTaskFinished(int nodeId, InetAddress address, int port) {
 		this.nodeId = nodeId;
+		this.address = address;
+		this.port = port;
 	}
 
 	public OverlayNodeReportsTaskFinished(DataInputStream dataIn) throws IOException {
+		address = Protocol.readAddress(dataIn);
+		port = dataIn.readInt();
 		nodeId = dataIn.readInt();
 	}
 
@@ -27,6 +34,9 @@ public class OverlayNodeReportsTaskFinished implements Event {
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
 		dataOut.writeByte(Protocol.OVERLAY_NODE_REPORTS_TASK_FINISHED);
+		dataOut.writeByte(address.getAddress().length);
+		dataOut.write(address.getAddress());
+		dataOut.writeInt(port);
 		dataOut.writeInt(nodeId);
 
 		dataOut.flush();

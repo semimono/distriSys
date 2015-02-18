@@ -36,7 +36,7 @@ public class InteractiveCommandParser {
 		Scanner input = new Scanner(System.in);
 		String fullCommand = input.nextLine();
 		String[] command = fullCommand.split("\\s");
-		if (command[0].length() < 1 || command[0].equalsIgnoreCase("help")) {
+		if (command[0].length() < 1 || command[0].equals("help") || command[0].equals("h")) {
 			showUsage();
 			return null;
 		}
@@ -60,7 +60,6 @@ public class InteractiveCommandParser {
 		for(Command com: commands) {
 			System.out.println("\t" +com);
 		}
-		System.out.println();
 	}
 
 	private class Command {

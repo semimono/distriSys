@@ -46,6 +46,7 @@ public class MessagingNode {
 		table = null;
 		nodeIds = null;
 		lastReceived = 0;
+		resetStatistics();
 
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 		try {
@@ -105,7 +106,6 @@ public class MessagingNode {
 		for(RoutingEntry entry: table.entries) {
 			entry.conn = new TCPConnection(new Socket(entry.address, entry.port));
 		}
-		resetStatistics();
 	}
 
 	public void resetStatistics() {
@@ -191,8 +191,12 @@ public class MessagingNode {
 		}
 	}
 
+	public int getPort() {
+		return server.getPort();
+	}
+
 	private void run() throws IOException {
-		registryCon.send(new OverlayNodeSendsRegistration(InetAddress.getLocalHost(), server.getPort()));
+		registryCon.send(new OverlayNodeSendsRegistration(InetAddress.getLocalHost(), getPort()));
 		server.start();
 
 		// handle console commands
@@ -220,7 +224,7 @@ public class MessagingNode {
 	}
 
 	public synchronized void close() throws IOException, InterruptedException {
-		if (registryCon != null && id > -1) {
+		if (registryCon != null && registryCon.isAlive() && id > -1) {
 			registryCon.send(new OverlayNodeSendsDeregistration(InetAddress.getLocalHost(), server.getPort(), id));
 			registryCon.join(10000);
 		}

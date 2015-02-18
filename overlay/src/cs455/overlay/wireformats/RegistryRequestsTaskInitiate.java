@@ -4,6 +4,7 @@ import cs455.overlay.node.MessagingNode;
 import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
+import java.net.InetAddress;
 
 /**
  * Created by Cullen on 1/25/2015.
@@ -38,9 +39,10 @@ public class RegistryRequestsTaskInitiate implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
-		MessagingNode.get().startMessaging(messageCount);
+		MessagingNode node = MessagingNode.get();
+		node.startMessaging(messageCount);
 		try {
-			con.send(new OverlayNodeReportsTaskFinished(MessagingNode.get().getId()));
+			con.send(new OverlayNodeReportsTaskFinished(node.getId(), InetAddress.getLocalHost(), node.getPort()));
 		} catch (IOException e) {
 			System.err.println("Failed to report task finished to registry.");
 		}
