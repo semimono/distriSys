@@ -5,6 +5,11 @@ package cs455.harvester;
  */
 public class Crawler {
 
+	public Crawler(int threadCount) {
+		ThreadPool pool = new ThreadPool(threadCount);
+
+	}
+
 
 	public static void main(String[] args) {
 		// parse args
@@ -32,7 +37,14 @@ public class Crawler {
 		}
 
 		// parse registry address
-		String registryAddress = args[0];
+		String registryAddress = args[2];
+
+		// parse config file address
+		String configFile = args[3];
+
+
+		// start crawling
+
 	}
 
 	private static void showUsageAndExit() {
