@@ -1,16 +1,54 @@
 package cs455.harvester;
 
+import net.htmlparser.jericho.Element;
+import net.htmlparser.jericho.HTMLElementName;
+import net.htmlparser.jericho.Source;
+
+import java.io.IOException;
+import java.net.URL;
+
 /**
  * Created by Cullen on 2/21/2015.
  */
-public class Crawler {
+public class Crawler implements Runnable {
 
-	public Crawler(int threadCount) {
-		ThreadPool pool = new ThreadPool(threadCount);
+	public static final String[] VALID_URLS = new String[] {
+		"http://www.bmb.colostate.edu/index.cfm",
+		"http://www.biology.colostate.edu/",
+		"http://www.chm.colostate.edu/",
+		"http://www.cs.colostate.edu/cstop/index.html",
+		"http://www.math.colostate.edu/",
+		"http://www.physics.colostate.edu/",
+		"http://www.colostate.edu/Depts/Psychology/",
+		"http://www.stat.colostate.edu/"
+	};
 
+	private URL target;
+
+	public Crawler(URL target) {
+		this.target = target;
 	}
 
 
+	@Override
+	public void run() {
+		Source page;
+		try {
+			page = new Source(target);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		for(Element e: page.getAllElements(HTMLElementName.A)) {
+			e.getAttributeValue("href");
+		}
+	}
+
+
+	//////////////////////
+	// Program Entrance //
+	//////////////////////
 	public static void main(String[] args) {
 		// parse args
 		if (args.length != 4) {
