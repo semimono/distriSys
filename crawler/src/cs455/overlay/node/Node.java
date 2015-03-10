@@ -1,8 +1,8 @@
 package cs455.overlay.node;
 
 import cs455.overlay.routing.RoutingTable;
-import cs455.overlay.transport.TCPConnection;
-import cs455.overlay.wireformats.OverlayNodeReportsTrafficSummary;
+import cs455.harvester.transport.TCPConnection;
+import cs455.harvester.wireformats.OverlayNodeReportsTrafficSummary;
 
 import java.net.InetAddress;
 

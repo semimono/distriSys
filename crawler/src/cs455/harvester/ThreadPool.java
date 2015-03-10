@@ -42,6 +42,7 @@ public class ThreadPool {
 			while(!interrupted()) {
 				try {
 					Thread.sleep(THREAD_WAIT_MILLIS);
+					System.out.println("Running task.");
 					pool.tasks.take().run();
 				} catch (InterruptedException e) {}
 			}

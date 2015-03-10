@@ -1,9 +1,8 @@
-package cs455.overlay.transport;
+package cs455.harvester.transport;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 
 /**
  * Created by Cullen on 1/25/2015.

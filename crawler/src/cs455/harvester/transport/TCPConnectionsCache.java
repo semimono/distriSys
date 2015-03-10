@@ -1,9 +1,7 @@
-package cs455.overlay.transport;
+package cs455.harvester.transport;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 /**

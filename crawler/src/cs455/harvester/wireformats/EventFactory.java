@@ -1,8 +1,7 @@
-package cs455.overlay.wireformats;
+package cs455.harvester.wireformats;
 
 import cs455.overlay.node.MessagingNode;
 import cs455.overlay.node.Registry;
-import cs455.overlay.transport.TCPConnection;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -47,6 +46,9 @@ public class EventFactory {
 				return new RegistryRequestsTrafficSummary(dataIn);
 			case Protocol.REGISTRY_SENDS_NODE_MANIFEST:
 				return new RegistrySendsNodeManifest(dataIn);
+
+			case Protocol.CRAWLER_SENDS_URL:
+				return new CrawlerSendsPage(dataIn);
 			default:
 				System.err.println("Unknown Message Type Received: " + messageType);
 				return null;

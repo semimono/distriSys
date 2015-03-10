@@ -33,12 +33,23 @@ public class Task implements Runnable {
 
 			// fetch url
 			URL url;
+			String href = e.getAttributeValue("href");
+			if (href == null || href.length() < 1)
+				continue;
 			try {
-				url = new URL(e.getAttributeValue("href"));
+				if (href.startsWith("/"))
+					url = new URL(target.getTarget() + href);
+				else
+					url = new URL(href);
 			} catch (MalformedURLException e1) {
-				e1.printStackTrace();
+//				e1.printStackTrace();
+				target.add(href);
+//				System.out.println("Broken Link at " +target +": " +href);
+//				System.out.println(e);
 				continue;
 			}
+
+//			System.out.println(e.toString() +": " +url);
 
 			// check domain
 			boolean outside = true;
@@ -50,13 +61,13 @@ public class Task implements Runnable {
 			}
 			if (outside) continue;
 
-			Page newPage = Crawler.get().addPage(url);
+			Page newPage = Crawler.get().addPage(url, target.getDepth() +1);
 			target.add(newPage);
 
 			// add job
-			if (newPage.explore()) {
+			if (newPage.explore() && newPage.valid()) {
 				try {
-					Crawler.get().addTask(new Task(new Page(url)));
+					Crawler.get().addTask(new Task(newPage));
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}

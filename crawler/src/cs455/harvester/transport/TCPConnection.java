@@ -1,7 +1,7 @@
-package cs455.overlay.transport;
+package cs455.harvester.transport;
 
-import cs455.overlay.wireformats.Event;
-import cs455.overlay.wireformats.EventFactory;
+import cs455.harvester.wireformats.Event;
+import cs455.harvester.wireformats.EventFactory;
 
 import java.io.*;
 import java.net.InetAddress;

@@ -1,7 +1,6 @@
-package cs455.overlay.wireformats;
+package cs455.harvester.wireformats;
 
 import cs455.overlay.node.MessagingNode;
-import cs455.overlay.transport.TCPConnection;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -10,23 +9,17 @@ import java.util.List;
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class OverlayNodeSendsData implements Event {
+public class OverlayNodeSendsData extends OverlayMessage {
 
-	public int destinationId;
-	public int sourceId;
 	public int payload;
-
-	public List<Integer> nodeTrace;
 
 	public OverlayNodeSendsData(int destinationId, int sourceId, int payload) {
 		this(destinationId, sourceId, payload, new ArrayList<Integer>());
 	}
 
 	public OverlayNodeSendsData(int destinationId, int sourceId, int payload, List<Integer> nodeTrace) {
-		this.destinationId = destinationId;
-		this.sourceId = sourceId;
+		super(destinationId, sourceId, nodeTrace);
 		this.payload = payload;
-		this.nodeTrace = nodeTrace;
 	}
 
 	public OverlayNodeSendsData(DataInputStream dataIn) throws IOException {
@@ -61,7 +54,7 @@ public class OverlayNodeSendsData implements Event {
 	}
 
 	@Override
-	public void execute(TCPConnection con) {
-		MessagingNode.get().receiveMessage(this);
+	public void perform() {
+		MessagingNode.get().addMessageHash(payload);
 	}
 }

@@ -1,4 +1,4 @@
-package cs455.overlay.wireformats;
+package cs455.harvester.wireformats;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -24,6 +24,8 @@ public class Protocol {
 
 	public static final byte REGISTRY_REQUESTS_TRAFFIC_SUMMARY = 11;
 	public static final byte OVERLAY_NODE_REPORTS_TRAFFIC_SUMMARY = 12;
+
+	public static final byte CRAWLER_SENDS_URL = 13;
 
 	public static InetAddress readAddress(DataInputStream dataIn) throws IOException {
 		byte ipLength = dataIn.readByte();

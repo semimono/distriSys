@@ -1,8 +1,8 @@
-package cs455.overlay.wireformats;
+package cs455.harvester.wireformats;
 
 import cs455.overlay.node.Node;
 import cs455.overlay.node.Registry;
-import cs455.overlay.transport.TCPConnection;
+import cs455.harvester.transport.TCPConnection;
 
 import java.io.*;
 import java.net.InetAddress;

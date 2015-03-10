@@ -1,16 +1,13 @@
-package cs455.overlay.wireformats;
+package cs455.harvester.wireformats;
 
 import cs455.overlay.node.MessagingNode;
 import cs455.overlay.routing.RoutingEntry;
 import cs455.overlay.routing.RoutingTable;
-import cs455.overlay.transport.TCPConnection;
+import cs455.harvester.transport.TCPConnection;
 
 import java.io.*;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

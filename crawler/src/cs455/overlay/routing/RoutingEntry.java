@@ -1,6 +1,6 @@
 package cs455.overlay.routing;
 
-import cs455.overlay.transport.TCPConnection;
+import cs455.harvester.transport.TCPConnection;
 
 import java.net.InetAddress;
 

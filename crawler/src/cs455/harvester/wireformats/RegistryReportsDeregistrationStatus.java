@@ -1,7 +1,6 @@
-package cs455.overlay.wireformats;
+package cs455.harvester.wireformats;
 
-import cs455.overlay.node.MessagingNode;
-import cs455.overlay.transport.TCPConnection;
+import cs455.harvester.transport.TCPConnection;
 
 import java.io.*;
 

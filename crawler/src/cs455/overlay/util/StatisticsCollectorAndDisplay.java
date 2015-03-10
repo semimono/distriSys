@@ -1,10 +1,7 @@
 package cs455.overlay.util;
 
-import cs455.overlay.node.Node;
-import cs455.overlay.wireformats.OverlayNodeReportsTrafficSummary;
+import cs455.harvester.wireformats.OverlayNodeReportsTrafficSummary;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 

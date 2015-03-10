@@ -23,6 +23,8 @@ public class Crawler {
 	public static final String[] VALID_EXTENSIONS = new String[] {
 		".html", ".htm", ".cfm", ".asp", ".php", ".jsp"
 	};
+	public static final int MAX_RECURSION_DEPTH = 5;
+	public static final long INITIAL_WAIT_MILLIS = 10000;
 	private static Crawler singleton;
 
 	private ThreadPool pool;
@@ -57,7 +59,7 @@ public class Crawler {
 
 	private synchronized void start() {
 		try {
-			pool.add(new Task(addPage(root)));
+			pool.add(new Task(addPage(root, 0)));
 		} catch (InterruptedException e) {
 		}
 	}
@@ -76,10 +78,10 @@ public class Crawler {
 		return rootPrefix;
 	}
 
-	public synchronized Page addPage(URL url) {
+	public synchronized Page addPage(URL url, int depth) {
 		Page page = pages.get(url);
-		if (page != null) {
-			page = new Page(url);
+		if (page == null) {
+			page = new Page(url, depth);
 			pages.put(url, page);
 		}
 		return page;
@@ -135,6 +137,8 @@ public class Crawler {
 
 		// start crawling
 		init(rootUrl, threadCount);
+
+		Thread.sleep(INITIAL_WAIT_MILLIS);
 		get().start();
 
 	}
