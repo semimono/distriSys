@@ -58,10 +58,15 @@ public class Crawler {
 	}
 
 	private synchronized void start() {
+		pool.start();
 		try {
 			pool.add(new Task(addPage(root, 0)));
 		} catch (InterruptedException e) {
 		}
+
+		// wait for all threads to complete
+		// write files
+
 	}
 
 

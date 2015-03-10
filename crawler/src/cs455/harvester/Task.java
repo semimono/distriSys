@@ -13,7 +13,7 @@ import java.net.URL;
  */
 public class Task implements Runnable {
 
-	private Page target;
+	private final Page target;
 
 	public Task(Page target) {
 		this.target = target;
@@ -43,7 +43,7 @@ public class Task implements Runnable {
 					url = new URL(href);
 			} catch (MalformedURLException e1) {
 //				e1.printStackTrace();
-				target.add(href);
+				target.addBroken(href);
 //				System.out.println("Broken Link at " +target +": " +href);
 //				System.out.println(e);
 				continue;
@@ -62,7 +62,7 @@ public class Task implements Runnable {
 			if (outside) continue;
 
 			Page newPage = Crawler.get().addPage(url, target.getDepth() +1);
-			target.add(newPage);
+			target.add(url);
 
 			// add job
 			if (newPage.explore() && newPage.valid()) {

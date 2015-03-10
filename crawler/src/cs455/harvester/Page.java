@@ -9,8 +9,9 @@ import java.util.Set;
  */
 public class Page {
 
-	private URL target;
-	private Set<Page> links;
+	private final URL target;
+	private Set<URL> links;
+	private Set<URL> externalFrom;
 	private Set<String> brokenLinks;
 	private boolean explored;
 	private int depth;
@@ -18,8 +19,9 @@ public class Page {
 	public Page(URL target, int depth) {
 		this.target = target;
 		this.depth = depth;
-		links = new HashSet<Page>();
+		links = new HashSet<URL>();
 		brokenLinks = new HashSet<String>();
+		externalFrom = new HashSet<URL>();
 		explored = false;
 	}
 
@@ -45,24 +47,28 @@ public class Page {
 		return target;
 	}
 
-	public synchronized boolean add(Page link) {
+	public synchronized boolean add(URL link) {
 		return links.add(link);
 	}
 
-	public synchronized boolean add(String brokenLink) {
+	public synchronized boolean addBroken(String brokenLink) {
 		return brokenLinks.add(brokenLink);
 	}
 
-	public synchronized boolean remove(Page link) {
+	public synchronized boolean addExternalFrom(URL link) {
+		return externalFrom.add(link);
+	}
+
+	public synchronized boolean remove(URL link) {
 		return links.remove(link);
 	}
 
-	public synchronized boolean contains(Page link) {
+	public synchronized boolean contains(URL link) {
 		return links.contains(link);
 	}
 
-	public synchronized Set<Page> getLinks() {
-		return new HashSet<Page>(links);
+	public synchronized Set<URL> getLinks() {
+		return new HashSet<URL>(links);
 	}
 
 	public synchronized Set<String> getBrokenLinks() {
