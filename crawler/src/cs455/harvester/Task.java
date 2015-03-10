@@ -13,7 +13,7 @@ import java.net.URL;
  */
 public class Task implements Runnable {
 
-	private Page target;
+	private final Page target;
 
 	public Task(Page target) {
 		this.target = target;
@@ -51,7 +51,7 @@ public class Task implements Runnable {
 			if (outside) continue;
 
 			Page newPage = Crawler.get().addPage(url);
-			target.add(newPage);
+			target.add(url);
 
 			// add job
 			if (newPage.explore()) {

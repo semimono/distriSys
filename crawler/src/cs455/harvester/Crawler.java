@@ -56,10 +56,15 @@ public class Crawler {
 	}
 
 	private synchronized void start() {
+		pool.start();
 		try {
 			pool.add(new Task(addPage(root)));
 		} catch (InterruptedException e) {
 		}
+
+		// wait for all threads to complete
+		// write files
+
 	}
 
 
@@ -78,7 +83,7 @@ public class Crawler {
 
 	public synchronized Page addPage(URL url) {
 		Page page = pages.get(url);
-		if (page != null) {
+		if (page == null) {
 			page = new Page(url);
 			pages.put(url, page);
 		}
