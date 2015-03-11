@@ -9,7 +9,6 @@ import java.util.Queue;
 public class ThreadPool extends Thread {
 
 	public static final long THREAD_WAIT_MILLIS = 1000;
-//	LinkedBlockingQueue<Runnable> tasks;
 	private Queue<Runnable> tasks;
 	private Queue<WorkerThread> available;
 	private WorkerThread[] workers;
@@ -86,7 +85,6 @@ public class ThreadPool extends Thread {
 						}
 						wait();
 					}
-					System.out.println("Running task.");
 					task.run();
 				} catch (InterruptedException e) {}
 			}
