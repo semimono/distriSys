@@ -1,6 +1,4 @@
-package cs455.overlay.util;
-
-import org.omg.CORBA.COMM_FAILURE;
+package cs455.harvester.util;
 
 import java.util.*;
 

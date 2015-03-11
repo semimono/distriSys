@@ -1,6 +1,5 @@
 package cs455.harvester;
 
-//import java.util.concurrent.LinkedBlockingQueue;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -26,10 +25,15 @@ public class ThreadPool extends Thread {
 		notify();
 	}
 
+	@Override
 	public void interrupt() {
 		super.interrupt();
 		for(WorkerThread worker: workers)
 			worker.interrupt();
+	}
+
+	public synchronized boolean idle() {
+		return tasks.size() < 1 && available.size() == workers.length;
 	}
 
 	@Override

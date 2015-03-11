@@ -1,63 +1,69 @@
 package cs455.harvester;
 
+import cs455.harvester.transport.TCPConnection;
+import cs455.harvester.transport.TCPServerThread;
+import cs455.harvester.util.OutputGenerator;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Cullen on 2/21/2015.
  */
 public class Crawler {
 
-	public static final String[] VALID_PREFIXES = new String[] {
-		"http://www.bmb.colostate.edu",///index.cfm",
-		"http://www.biology.colostate.edu",///",
-		"http://www.chm.colostate.edu",///",
-		"http://www.cs.colostate.edu",///cstop/index.html",
-		"http://www.math.colostate.edu",///",
-		"http://www.physics.colostate.edu",///",
-		"http://www.colostate.edu",///Depts/Psychology/",
-		"http://www.stat.colostate.edu"///"
-	};
+//	public static final String[] VALID_PREFIXES = new String[] {
+//		"http://www.bmb.colostate.edu",///index.cfm",
+//		"http://www.biology.colostate.edu",///",
+//		"http://www.chm.colostate.edu",///",
+//		"http://www.cs.colostate.edu",///cstop/index.html",
+//		"http://www.math.colostate.edu",///",
+//		"http://www.physics.colostate.edu",///",
+//		"http://www.colostate.edu",///Depts/Psychology/",
+//		"http://www.stat.colostate.edu"///"
+//	};
 	public static final String[] VALID_EXTENSIONS = new String[] {
 		".html", ".htm", ".cfm", ".asp", ".php", ".jsp"
 	};
 	public static final int MAX_RECURSION_DEPTH = 5;
-	public static final long INITIAL_WAIT_MILLIS = 10000;
+	public static final long INITIAL_WAIT_MILLIS = 1000; // TODO: increase back up to 10 seconds
 	private static Crawler singleton;
 
+	private TCPServerThread server;
 	private ThreadPool pool;
 	private URL root;
-	private String rootPrefix;
 	private Map<URL, Page> pages;
+	private List<RemoteCrawler> siblings;
 
-	private Crawler(URL root, int threadCount) {
-		synchronized(this) {
+	private Crawler(URL root, int threadCount, int port, String configFile) throws IOException {
+//		synchronized(this) {
 			this.root = root;
 			pool = new ThreadPool(threadCount);
 			pages = new HashMap<URL, Page>();
-			rootPrefix = null;
-			for(String prefix: Crawler.VALID_PREFIXES)
-				if (root.toString().startsWith(prefix)) {
-					rootPrefix = prefix;
-					break;
-				}
-			if (rootPrefix == null)
-				throw new RuntimeException("Invalid URL passed as root URL.");
+			siblings = new ArrayList<RemoteCrawler>();
+
+			readConfig(configFile);
+			server = new TCPServerThread(port);
 
 			synchronized (Crawler.class) {
 				if (singleton != null)
 					throw new RuntimeException("Created singleton Crawler multiple times.");
 				singleton = this;
 			}
-		}
+			server.start();
+//		}
 	}
-	private static Crawler init(URL root, int threadCount) {
-		return new Crawler(root, threadCount);
+	private static Crawler init(URL root, int threadCount, int port, String configFile) throws IOException {
+		return new Crawler(root, threadCount, port, configFile);
 	}
 
-	private synchronized void start() {
+	private synchronized void start() throws InterruptedException {
+		// begin crawling
 		pool.start();
 		try {
 			pool.add(new Task(addPage(root, 0)));
@@ -65,7 +71,24 @@ public class Crawler {
 		}
 
 		// wait for all threads to complete
-		// write files
+		while(true) {
+			Thread.sleep(2000);
+			if (!pool.idle()) continue;
+			boolean done = true;
+			for(RemoteCrawler c: siblings) {
+				if (!c.finished) {
+					done = false;
+					break;
+				}
+			}
+			if (done)
+				break;
+		}
+
+		// write output
+		OutputGenerator out = new OutputGenerator(pages, root);
+		;
+
 
 	}
 
@@ -79,15 +102,20 @@ public class Crawler {
 	public URL getRoot() {
 		return root;
 	}
-	public String getRootPrefix() {
-		return rootPrefix;
+	public synchronized List<RemoteCrawler> getSiblings() {
+		return new ArrayList<RemoteCrawler>(siblings);
 	}
 
 	public synchronized Page addPage(URL url, int depth) {
+		if (url.toString().endsWith("/")) try {
+			url = new URL(url.toString().replaceFirst("/+$", ""));
+		} catch (MalformedURLException e) {}
 		Page page = pages.get(url);
 		if (page == null) {
 			page = new Page(url, depth);
 			pages.put(url, page);
+//		} else if (page.getDepth() > depth) {
+//			page.resetExplored(depth);
 		}
 		return page;
 	}
@@ -99,16 +127,41 @@ public class Crawler {
 		pool.add(task);
 	}
 
+	public synchronized void addConnection(TCPConnection con, URL root) {
+		for(RemoteCrawler c: siblings) {
+			if (c.getRoot().getHost().equals(root.getHost())) {
+				c.setConnection(con);
+			}
+		}
+	}
 
 
 
-
+	private synchronized void readConfig(String fileName) throws FileNotFoundException {
+		Scanner in = new Scanner(new File(fileName));
+		try {
+			while(in.hasNextLine()) {
+				String line = in.nextLine();
+				String host = line.replaceFirst(":.*", "");
+				line = line.replace(host +":", "");
+				int port = Integer.parseInt(line.replaceFirst(",.*", ""));
+				String url = line.replaceFirst(".+?,", "");
+				siblings.add(new RemoteCrawler(host, port, new URL(url)));
+			}
+		} catch (NumberFormatException e) {
+			System.err.println("Improperly formatted configuration file: " +fileName);
+			System.exit(-1);
+		} catch (MalformedURLException e) {
+			System.err.println("Improperly formatted configuration file: " +fileName);
+			System.exit(-1);
+		}
+	}
 
 
 	//////////////////////
 	// Program Entrance //
 	//////////////////////
-	public static void main(String[] args) throws InterruptedException, MalformedURLException {
+	public static void main(String[] args) throws InterruptedException, IOException {
 		// parse args
 		if (args.length != 4) {
 			showUsageAndExit();
@@ -141,7 +194,7 @@ public class Crawler {
 
 
 		// start crawling
-		init(rootUrl, threadCount);
+		init(rootUrl, threadCount, port, configFile);
 
 		Thread.sleep(INITIAL_WAIT_MILLIS);
 		get().start();

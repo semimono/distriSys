@@ -3,6 +3,7 @@ package cs455.harvester.wireformats;
 import cs455.harvester.Crawler;
 import cs455.harvester.Page;
 import cs455.harvester.Task;
+import cs455.harvester.transport.TCPConnection;
 
 import java.io.*;
 import java.net.URL;
@@ -12,27 +13,19 @@ import java.util.List;
 /**
  * Created by Cullen on 1/25/2015.
  */
-public class CrawlerSendsPage extends OverlayMessage {
+public class CrawlerSendsPage implements Event {
 
 	public URL target;
+	public URL from;
 
-	public CrawlerSendsPage(int destinationId, int sourceId, URL target) {
-		this(destinationId, sourceId, target, new ArrayList<Integer>());
-	}
-
-	public CrawlerSendsPage(int destinationId, int sourceId, URL target, List<Integer> nodeTrace) {
-		super(destinationId, sourceId, nodeTrace);
+	public CrawlerSendsPage(URL target, URL from) {
 		this.target = target;
+		this.from = from;
 	}
 
 	public CrawlerSendsPage(DataInputStream dataIn) throws IOException {
-		destinationId = dataIn.readInt();
-		sourceId = dataIn.readInt();
 		target = new URL(Protocol.readString(dataIn));
-		int traceSize = dataIn.readInt();
-		nodeTrace = new ArrayList<Integer>(traceSize);
-		for(int i=0; i<traceSize; ++i)
-			nodeTrace.add(dataIn.readInt());
+		from = new URL(Protocol.readString(dataIn));
 	}
 
 	@Override
@@ -42,13 +35,10 @@ public class CrawlerSendsPage extends OverlayMessage {
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
 		dataOut.writeByte(Protocol.CRAWLER_SENDS_URL);
-		dataOut.writeInt(destinationId);
-		dataOut.writeInt(sourceId);
 		dataOut.writeByte(target.toString().length());
 		dataOut.writeBytes(target.toString());
-		dataOut.writeInt(nodeTrace.size());
-		for(int id: nodeTrace)
-			dataOut.writeInt(id);
+		dataOut.writeByte(from.toString().length());
+		dataOut.writeBytes(from.toString());
 
 		dataOut.flush();
 		marshalledBytes = baOutputStream.toByteArray();
@@ -58,14 +48,14 @@ public class CrawlerSendsPage extends OverlayMessage {
 	}
 
 	@Override
-	public void perform() {
+	public void execute(TCPConnection con) {
+		System.out.println("RECEIVED MESSAGE!");
 		Page newPage = Crawler.get().addPage(target, 0);
-		if (newPage.explore()) {
+		newPage.addExternalFrom(from);
+		if (newPage.explore() && newPage.valid()) {
 			try {
 				Crawler.get().addTask(new Task(newPage));
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
+			} catch (InterruptedException e1) {}
 		}
 	}
 }

@@ -26,6 +26,7 @@ public class Protocol {
 	public static final byte OVERLAY_NODE_REPORTS_TRAFFIC_SUMMARY = 12;
 
 	public static final byte CRAWLER_SENDS_URL = 13;
+	public static final byte CRAWLER_OPENS_CONNECTION = 14;
 
 	public static InetAddress readAddress(DataInputStream dataIn) throws IOException {
 		byte ipLength = dataIn.readByte();

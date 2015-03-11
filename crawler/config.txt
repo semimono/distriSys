@@ -1,0 +1,8 @@
+denver:4489,http://www.bmb.colostate.edu
+boston:4489,http://www.biology.colostate.edu/
+atlanta:4489,http://www.chm.colostate.edu/
+austin:4489,http://www.cs.colostate.edu/cstop/index.html
+frankfort:4489,http://www.math.colostate.edu/
+helena:4489,http://www.physics.colostate.edu/
+jackson:4489,http://www.colostate.edu/Depts/Psychology/
+lincoln:4489,http://www.stat.colostate.edu/

@@ -12,15 +12,15 @@ public class Page {
 	private final URL target;
 	private Set<URL> links;
 	private Set<URL> externalFrom;
-	private Set<String> brokenLinks;
+	private boolean broken;
 	private boolean explored;
 	private int depth;
 
 	public Page(URL target, int depth) {
 		this.target = target;
 		this.depth = depth;
+		this.broken = false;
 		links = new HashSet<URL>();
-		brokenLinks = new HashSet<String>();
 		externalFrom = new HashSet<URL>();
 		explored = false;
 	}
@@ -33,7 +33,6 @@ public class Page {
 	}
 
 	public boolean valid() {
-		System.out.println(target.toString());
 		if (target.toString().matches("//.*/.*\\.\\w*$")) {
 			for(String extension: Crawler.VALID_EXTENSIONS)
 				if (target.toString().endsWith(extension))
@@ -49,10 +48,6 @@ public class Page {
 
 	public synchronized boolean add(URL link) {
 		return links.add(link);
-	}
-
-	public synchronized boolean addBroken(String brokenLink) {
-		return brokenLinks.add(brokenLink);
 	}
 
 	public synchronized boolean addExternalFrom(URL link) {
@@ -71,12 +66,19 @@ public class Page {
 		return new HashSet<URL>(links);
 	}
 
-	public synchronized Set<String> getBrokenLinks() {
-		return new HashSet<String>(brokenLinks);
+	public synchronized void resetExplored(int depth) {
+		this.depth = depth;
+		explored = false;
 	}
-
 	public int getDepth() {
 		return depth;
+	}
+
+	public void setBroken(boolean broken) {
+		this.broken = broken;
+	}
+	public boolean isBroken() {
+		return broken;
 	}
 
 	@Override
