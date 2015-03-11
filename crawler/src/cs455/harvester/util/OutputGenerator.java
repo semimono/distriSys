@@ -89,17 +89,4 @@ public class OutputGenerator {
 		}
 		brokenLinks.close();
 	}
-
-	private class Node {
-		public boolean explored;
-
-	}
-//	private class BrokenLink {
-//		public URL from, to;
-//
-//		public BrokenLink(URL from, URL to) {
-//			this.from = from;
-//			this.to = to;
-//		}
-//	}
 }

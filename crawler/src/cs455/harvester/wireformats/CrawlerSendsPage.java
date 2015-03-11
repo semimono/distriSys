@@ -47,7 +47,7 @@ public class CrawlerSendsPage implements Event {
 
 	@Override
 	public void execute(TCPConnection con) {
-		System.out.println("RECEIVED MESSAGE!");
+//		System.out.println("RECEIVED MESSAGE!");
 		Page newPage = Crawler.get().addPage(target, 0);
 		newPage.addFrom(from);
 		if (newPage.explore() && newPage.valid()) {
