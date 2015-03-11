@@ -11,7 +11,7 @@ public class Page {
 
 	private final URL target;
 	private Set<URL> links;
-	private Set<URL> externalFrom;
+	private Set<URL> fromLinks;
 	private boolean broken;
 	private boolean explored;
 	private int depth;
@@ -21,7 +21,7 @@ public class Page {
 		this.depth = depth;
 		this.broken = false;
 		links = new HashSet<URL>();
-		externalFrom = new HashSet<URL>();
+		fromLinks = new HashSet<URL>();
 		explored = false;
 	}
 
@@ -50,8 +50,8 @@ public class Page {
 		return links.add(link);
 	}
 
-	public synchronized boolean addExternalFrom(URL link) {
-		return externalFrom.add(link);
+	public synchronized boolean addFrom(URL link) {
+		return fromLinks.add(link);
 	}
 
 	public synchronized boolean remove(URL link) {
@@ -64,6 +64,9 @@ public class Page {
 
 	public synchronized Set<URL> getLinks() {
 		return new HashSet<URL>(links);
+	}
+	public synchronized Set<URL> getFromLinks() {
+		return new HashSet<URL>(fromLinks);
 	}
 
 	public synchronized void resetExplored(int depth) {

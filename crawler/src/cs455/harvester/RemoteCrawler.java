@@ -20,14 +20,15 @@ public class RemoteCrawler {
 	private int port;
 	private URL root;
 	private TCPConnection con;
-	boolean finished;
 	private Queue<Event> messages;
+
+	public boolean finished;
 
 	public RemoteCrawler(String host, int port, URL root) {
 		this.host = host;
 		this.port = port;
 		this.root = root;
-		finished = false;
+		finished = true;
 		messages = new LinkedList<Event>();
 	}
 
@@ -49,9 +50,13 @@ public class RemoteCrawler {
 			return;
 		}
 		try {
-			System.out.println("Sending through normal connection");
 			con.send(message);
 		} catch (IOException e) {}
+	}
+
+	public static void close() {
+		if (starter() != null)
+			starter().interrupt();
 	}
 
 	private synchronized void flush() {
@@ -78,6 +83,7 @@ public class RemoteCrawler {
 	private static class Starter extends Thread {
 		public static final long RETRY_WAIT_MILLIS = 10000;
 		private Queue<RemoteCrawler> crawlers;
+		boolean interrupted = false;
 
 		private Starter() {
 			this.crawlers = new LinkedList<RemoteCrawler>();
@@ -88,8 +94,14 @@ public class RemoteCrawler {
 		}
 
 		@Override
+		public void interrupt() {
+			interrupted = true;
+			super.interrupt();
+		}
+
+		@Override
 		public void run() {
-			while(!interrupted()) {
+			while(!interrupted) {
 				int i;
 				synchronized(this) {
 					i = crawlers.size();

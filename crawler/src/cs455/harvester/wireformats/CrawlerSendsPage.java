@@ -7,8 +7,6 @@ import cs455.harvester.transport.TCPConnection;
 
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Cullen on 1/25/2015.
@@ -51,7 +49,7 @@ public class CrawlerSendsPage implements Event {
 	public void execute(TCPConnection con) {
 		System.out.println("RECEIVED MESSAGE!");
 		Page newPage = Crawler.get().addPage(target, 0);
-		newPage.addExternalFrom(from);
+		newPage.addFrom(from);
 		if (newPage.explore() && newPage.valid()) {
 			try {
 				Crawler.get().addTask(new Task(newPage));

@@ -1,8 +1,10 @@
 package cs455.harvester;
 
 import cs455.harvester.transport.TCPConnection;
+import cs455.harvester.transport.TCPConnectionsCache;
 import cs455.harvester.transport.TCPServerThread;
 import cs455.harvester.util.OutputGenerator;
+import cs455.harvester.wireformats.CrawlerSendsStatus;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,21 +19,15 @@ import java.util.*;
  */
 public class Crawler {
 
-//	public static final String[] VALID_PREFIXES = new String[] {
-//		"http://www.bmb.colostate.edu",///index.cfm",
-//		"http://www.biology.colostate.edu",///",
-//		"http://www.chm.colostate.edu",///",
-//		"http://www.cs.colostate.edu",///cstop/index.html",
-//		"http://www.math.colostate.edu",///",
-//		"http://www.physics.colostate.edu",///",
-//		"http://www.colostate.edu",///Depts/Psychology/",
-//		"http://www.stat.colostate.edu"///"
-//	};
+	// constants
 	public static final String[] VALID_EXTENSIONS = new String[] {
 		".html", ".htm", ".cfm", ".asp", ".php", ".jsp"
 	};
 	public static final int MAX_RECURSION_DEPTH = 5;
-	public static final long INITIAL_WAIT_MILLIS = 1000; // TODO: increase back up to 10 seconds
+	public static final long INITIAL_WAIT_MILLIS = 10000;
+	public static final boolean OVERWRITE_CRAWLING_DEPTH = false;
+
+	// members
 	private static Crawler singleton;
 
 	private TCPServerThread server;
@@ -39,30 +35,29 @@ public class Crawler {
 	private URL root;
 	private Map<URL, Page> pages;
 	private List<RemoteCrawler> siblings;
+	private boolean allDone;
 
 	private Crawler(URL root, int threadCount, int port, String configFile) throws IOException {
-//		synchronized(this) {
-			this.root = root;
-			pool = new ThreadPool(threadCount);
-			pages = new HashMap<URL, Page>();
-			siblings = new ArrayList<RemoteCrawler>();
+		this.root = root;
+		pool = new ThreadPool(threadCount);
+		pages = new HashMap<URL, Page>();
+		siblings = new ArrayList<RemoteCrawler>();
 
-			readConfig(configFile);
-			server = new TCPServerThread(port);
+		readConfig(configFile);
+		server = new TCPServerThread(port);
 
-			synchronized (Crawler.class) {
-				if (singleton != null)
-					throw new RuntimeException("Created singleton Crawler multiple times.");
-				singleton = this;
-			}
-			server.start();
-//		}
+		synchronized (Crawler.class) {
+			if (singleton != null)
+				throw new RuntimeException("Created singleton Crawler multiple times.");
+			singleton = this;
+		}
+		server.start();
 	}
 	private static Crawler init(URL root, int threadCount, int port, String configFile) throws IOException {
 		return new Crawler(root, threadCount, port, configFile);
 	}
 
-	private synchronized void start() throws InterruptedException {
+	private void start() throws InterruptedException, IOException {
 		// begin crawling
 		pool.start();
 		try {
@@ -71,25 +66,36 @@ public class Crawler {
 		}
 
 		// wait for all threads to complete
+		allDone = false;
 		while(true) {
-			Thread.sleep(2000);
-			if (!pool.idle()) continue;
-			boolean done = true;
+			Thread.sleep(5000);
+			boolean done = pool.idle();
+			boolean othersDone = true;
 			for(RemoteCrawler c: siblings) {
-				if (!c.finished) {
-					done = false;
-					break;
-				}
+				c.send(new CrawlerSendsStatus(root, done));
+				if (!c.finished)
+					othersDone = false;
 			}
-			if (done)
-				break;
+
+			if (done && othersDone) {
+				if (allDone)
+					break;
+				allDone = true;
+			} else {
+				allDone = false;
+			}
 		}
 
 		// write output
+		System.out.println("Finished Crawling.");
+		TCPConnectionsCache.get().close();
+		pool.close();
+		server.close();
+		RemoteCrawler.close();
+		System.out.println("Writing Output.");
 		OutputGenerator out = new OutputGenerator(pages, root);
-		;
-
-
+		out.write();
+		System.out.println("Done.");
 	}
 
 
@@ -105,7 +111,9 @@ public class Crawler {
 	public synchronized List<RemoteCrawler> getSiblings() {
 		return new ArrayList<RemoteCrawler>(siblings);
 	}
-
+	public void setIncomplete() {
+		allDone = false;
+	}
 	public synchronized Page addPage(URL url, int depth) {
 		if (url.toString().endsWith("/")) try {
 			url = new URL(url.toString().replaceFirst("/+$", ""));
@@ -114,8 +122,8 @@ public class Crawler {
 		if (page == null) {
 			page = new Page(url, depth);
 			pages.put(url, page);
-//		} else if (page.getDepth() > depth) {
-//			page.resetExplored(depth);
+		} else if (OVERWRITE_CRAWLING_DEPTH && page.getDepth() > depth) {
+			page.resetExplored(depth);
 		}
 		return page;
 	}
@@ -145,8 +153,10 @@ public class Crawler {
 				String host = line.replaceFirst(":.*", "");
 				line = line.replace(host +":", "");
 				int port = Integer.parseInt(line.replaceFirst(",.*", ""));
-				String url = line.replaceFirst(".+?,", "");
-				siblings.add(new RemoteCrawler(host, port, new URL(url)));
+				URL url = new URL(line.replaceFirst(".+?,", ""));
+				if (url.getHost().equals(root.getHost()))
+					continue;
+				siblings.add(new RemoteCrawler(host, port, url));
 			}
 		} catch (NumberFormatException e) {
 			System.err.println("Improperly formatted configuration file: " +fileName);

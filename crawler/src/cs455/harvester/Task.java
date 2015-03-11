@@ -31,11 +31,8 @@ public class Task implements Runnable {
 			HttpURLConnection con = (HttpURLConnection)(target.getTarget().openConnection());
 			con.connect();
 			InputStream is = con.getInputStream();
-			// If there is a redirection, then it might be reflected in the resolved URL
-			String resolvedUrl = con.getURL().toString();
 			page = new Source(is);
 		} catch (IOException e) {
-			e.printStackTrace();
 			target.setBroken(true);
 			return;
 		}
@@ -54,15 +51,17 @@ public class Task implements Runnable {
 				else
 					url = new URL(href);
 			} catch (MalformedURLException e1) {
-//				Crawler.get().addPage(url, target.getDepth() + 1, true);
-//				System.out.println("Broken Link at " +target +": " +href);
 				continue;
 			}
+			if (url.toString().endsWith("/")) try {
+				url = new URL(url.toString().replaceFirst("/+$", ""));
+			} catch (MalformedURLException exc) {}
+			target.add(url);
 
 			// add url to job queue
-			target.add(url);
 			if (url.getHost().equals(Crawler.get().getRoot().getHost())) {
 				Page newPage = Crawler.get().addPage(url, target.getDepth() + 1);
+				newPage.addFrom(target.getTarget());
 
 				// add job
 				if (newPage.explore() && newPage.getDepth() < Crawler.MAX_RECURSION_DEPTH) {
@@ -76,7 +75,6 @@ public class Task implements Runnable {
 			} else {
 				// check domain
 				RemoteCrawler crawler = null;
-//				System.out.println("HOST: " + url.getHost());
 				for(RemoteCrawler c: Crawler.get().getSiblings()) {
 					if (url.getHost().equals(c.getRoot().getHost())) {
 						crawler = c;
@@ -84,7 +82,7 @@ public class Task implements Runnable {
 					}
 				}
 				if (crawler == null) continue;
-				System.out.println("SENT MESSAGE!");
+//				System.out.println("SENT MESSAGE!");
 				crawler.send(new CrawlerSendsPage(url, target.getTarget()));
 			}
 		}

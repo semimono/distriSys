@@ -24,6 +24,8 @@ public class EventFactory {
 				return new CrawlerSendsPage(dataIn);
 			case Protocol.CRAWLER_OPENS_CONNECTION:
 				return new CrawlerOpensConnection(dataIn);
+			case Protocol.CRAWLER_SENDS_STATUS:
+				return new CrawlerSendsStatus(dataIn);
 			default:
 				System.err.println("Unknown Message Type Received: " + messageType);
 				return null;

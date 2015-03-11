@@ -25,9 +25,8 @@ public class ThreadPool extends Thread {
 		notify();
 	}
 
-	@Override
-	public void interrupt() {
-		super.interrupt();
+	public void close() {
+		interrupt();
 		for(WorkerThread worker: workers)
 			worker.interrupt();
 	}
@@ -43,7 +42,7 @@ public class ThreadPool extends Thread {
 			workers[i].start();
 		}
 		try {
-			while (!interrupted()) {
+			while (!isInterrupted()) {
 				while (tasks.size() < 1 || available.size() < 1) {
 					if (interrupted()) return;
 					wait();
@@ -58,6 +57,7 @@ public class ThreadPool extends Thread {
 
 		ThreadPool pool;
 		Runnable task;
+		boolean interrupted = false;
 
 		public WorkerThread(ThreadPool pool) {
 			this.pool = pool;
@@ -69,8 +69,14 @@ public class ThreadPool extends Thread {
 		}
 
 		@Override
+		public void interrupt() {
+			interrupted = true;
+			super.interrupt();
+		}
+
+		@Override
 		public void run() {
-			while(!interrupted()) {
+			while(!interrupted) {
 				try {
 					Thread.sleep(THREAD_WAIT_MILLIS);
 					synchronized(this) {
