@@ -1,7 +1,4 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -40,6 +37,7 @@ public class Connector {
             stmt.executeUpdate("INSERT INTO students (StudentID, FName, LName, Degree) values ("
 				+id +",'" +firstName +"','" +lastName +"','" +degree +"')");
 			System.out.println("Added student " +id +".");
+			con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -65,6 +63,87 @@ public class Connector {
 			stmt.executeUpdate("INSERT INTO books (ISBN, Name, Year, Copies) values ("
 				+isbn +",'" +name +"'," +year +"," +copies +")");
 			System.out.println("Added book " +isbn +".");
+			con.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void removeStudent(String[] command) {
+		if (command.length != 2) {
+			improperFormat();
+			return;
+		}
+		int id;
+		try {
+			id = Integer.parseInt(command[1]);
+		} catch (NumberFormatException e) {
+			improperFormat();
+			return;
+		}
+		try {
+			Statement stmt = con.createStatement();
+			int rows = stmt.executeUpdate("DELETE FROM students WHERE StudentID = " +id);
+			if (rows < 1)
+				System.out.println("No students with student ID " +id +".");
+			else
+				System.out.println("Removed student " +id +".");
+			con.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void removeBook(String[] command) {
+		if (command.length != 2) {
+			improperFormat();
+			return;
+		}
+		int isbn;
+		try {
+			isbn = Integer.parseInt(command[1]);
+		} catch (NumberFormatException e) {
+			improperFormat();
+			return;
+		}
+		try {
+			Statement stmt = con.createStatement();
+			int rows = stmt.executeUpdate("DELETE FROM books WHERE ISBN = " +isbn);
+			if (rows < 1)
+				System.out.println("No books with ISBN " +isbn +".");
+			else
+				System.out.println("Removed book " +isbn +".");
+			con.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void issueBook(String[] command) {
+		if (command.length != 3) {
+			improperFormat();
+			return;
+		}
+		int isbn, id;
+		try {
+			isbn = Integer.parseInt(command[1]);
+			id = Integer.parseInt(command[2]);
+		} catch (NumberFormatException e) {
+			improperFormat();
+			return;
+		}
+		try {
+			Statement stmt = con.createStatement();
+			int copies = stmt.executeQuery("SELECT * FROM books WHERE ISBN = " +isbn).getInt("Copies") -1;
+			if (copies < 0) {
+				System.out.println("No copies of book " +isbn +" left to issue out.");
+				return;
+			}
+			int rows = stmt.executeUpdate("INSERT INTO books2students (StudentID, ISBN, IssueDate, DueDate) VALUES ("
+				+id +"," +isbn +"," +"CURRENT_DATE,CURRENT_DATE+" +30 +")");
+			stmt.executeUpdate("UPDATE books SET Copies = " +copies +" WHERE ISBN = " +isbn);
+			System.out.println("Issued book " +isbn +" to student " +id +".");
+			con.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -109,13 +188,13 @@ public class Connector {
 					addBook(command);
 					break;
 				case "rs":
-					
+					removeStudent(command);
 					break;
 				case "rb":
-					
+					removeBook(command);
 					break;
 				case "ib":
-					
+					issueBook(command);
 					break;
 				case "q":
 					running = false;
