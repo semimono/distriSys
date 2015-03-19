@@ -38,7 +38,7 @@ public class Connector {
 		try {
 			Statement stmt = con.createStatement();
             stmt.executeUpdate("INSERT INTO students (StudentID, FName, LName, Degree) values ("
-				+id +"," +firstName +"," +lastName +"," +degree +")");
+				+id +",'" +firstName +"','" +lastName +"','" +degree +"')");
 			System.out.println("Added student " +id +".");
         } catch (SQLException e) {
             e.printStackTrace();
@@ -63,7 +63,7 @@ public class Connector {
 		try {
 			Statement stmt = con.createStatement();
 			stmt.executeUpdate("INSERT INTO books (ISBN, Name, Year, Copies) values ("
-				+isbn +"," +name +"," +year +"," +copies +")");
+				+isbn +",'" +name +"'," +year +"," +copies +")");
 			System.out.println("Added book " +isbn +".");
 		} catch (SQLException e) {
 			e.printStackTrace();
