@@ -34,9 +34,13 @@ public class Connector {
 		String degree = command[4];
 		try {
 			Statement stmt = con.createStatement();
+			if (!stmt.executeQuery("SELECT * FROM students WHERE StudentID = " +id).next()) {
+				System.out.println("Student with ID " +id +" already exists; cannot overwrite.");
+				return;
+			}
             stmt.executeUpdate("INSERT INTO students (StudentID, FName, LName, Degree) values ("
 				+id +",'" +firstName +"','" +lastName +"','" +degree +"')");
-			System.out.println("Added student " +id +".");
+			System.out.println("Added student " + id + ".");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -59,9 +63,13 @@ public class Connector {
 		String name = command[2];
 		try {
 			Statement stmt = con.createStatement();
+			if (!stmt.executeQuery("SELECT * FROM books WHERE ISBN = " +isbn).next()) {
+				System.out.println("Book with ISBN " +isbn +" already exists; cannot overwrite.");
+				return;
+			}
 			stmt.executeUpdate("INSERT INTO books (ISBN, Name, Year, Copies) values ("
-				+isbn +",'" +name +"'," +year +"," +copies +")");
-			System.out.println("Added book " +isbn +".");
+				+ isbn + ",'" + name + "'," + year + "," + copies + ")");
+			System.out.println("Added book " + isbn + ".");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -130,15 +138,19 @@ public class Connector {
 		}
 		try {
 			Statement stmt = con.createStatement();
-			int copies = stmt.executeQuery("SELECT * FROM books WHERE ISBN = " +isbn).getInt("Copies") -1;
+			ResultSet set = stmt.executeQuery("SELECT * FROM books WHERE ISBN = " +isbn);
+			if (!set.next()) {
+
+			}
+			int copies = set.getInt("Copies") -1;
 			if (copies < 0) {
 				System.out.println("No copies of book " +isbn +" left to issue out.");
 				return;
 			}
 			int rows = stmt.executeUpdate("INSERT INTO books2students (StudentID, ISBN, IssueDate, DueDate) VALUES ("
 				+id +"," +isbn +"," +"CURRENT_DATE,CURRENT_DATE+" +30 +")");
-			stmt.executeUpdate("UPDATE books SET Copies = " +copies +" WHERE ISBN = " +isbn);
-			System.out.println("Issued book " +isbn +" to student " +id +".");
+			stmt.executeUpdate("UPDATE books SET Copies = " + copies + " WHERE ISBN = " + isbn);
+			System.out.println("Issued book " + isbn + " to student " + id + ".");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
