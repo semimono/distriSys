@@ -14,6 +14,7 @@ public class Connector {
         Properties props = new Properties();
         props.setProperty("user", user);
         props.setProperty("password", password);
+		System.out.println(url);
         return DriverManager.getConnection(url, props);
     }
 
