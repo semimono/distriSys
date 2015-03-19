@@ -37,7 +37,6 @@ public class Connector {
             stmt.executeUpdate("INSERT INTO students (StudentID, FName, LName, Degree) values ("
 				+id +",'" +firstName +"','" +lastName +"','" +degree +"')");
 			System.out.println("Added student " +id +".");
-			con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -63,7 +62,6 @@ public class Connector {
 			stmt.executeUpdate("INSERT INTO books (ISBN, Name, Year, Copies) values ("
 				+isbn +",'" +name +"'," +year +"," +copies +")");
 			System.out.println("Added book " +isbn +".");
-			con.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -88,7 +86,6 @@ public class Connector {
 				System.out.println("No students with student ID " +id +".");
 			else
 				System.out.println("Removed student " +id +".");
-			con.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -113,7 +110,6 @@ public class Connector {
 				System.out.println("No books with ISBN " +isbn +".");
 			else
 				System.out.println("Removed book " +isbn +".");
-			con.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -143,7 +139,6 @@ public class Connector {
 				+id +"," +isbn +"," +"CURRENT_DATE,CURRENT_DATE+" +30 +")");
 			stmt.executeUpdate("UPDATE books SET Copies = " +copies +" WHERE ISBN = " +isbn);
 			System.out.println("Issued book " +isbn +" to student " +id +".");
-			con.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
