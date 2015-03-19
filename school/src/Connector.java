@@ -1,6 +1,7 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -24,8 +25,9 @@ public class Connector {
 			improperFormat();
 			return;
 		}
+        int id;
 		try {
-		int ID = Integer.parseInt(command[1]);
+            id = Integer.parseInt(command[1]);
 		} catch (NumberFormatException e) {
 			improperFormat();
 			return;
@@ -33,7 +35,39 @@ public class Connector {
 		String firstName = command[2];
 		String lastName = command[3];
 		String degree = command[4];
-		
+		try {
+			Statement stmt = con.createStatement();
+            stmt.executeUpdate("INSERT INTO students (StudentID, FName, LName, Degree) values ("
+				+id +"," +firstName +"," +lastName +"," +degree +")");
+			System.out.println("Added student " +id +".");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+	public static void addBook(String[] command) {
+		if (command.length != 5) {
+			improperFormat();
+			return;
+		}
+		int isbn, year, copies;
+		try {
+			isbn = Integer.parseInt(command[1]);
+			year = Integer.parseInt(command[3]);
+			copies = Integer.parseInt(command[4]);
+		} catch (NumberFormatException e) {
+			improperFormat();
+			return;
+		}
+		String name = command[2];
+		try {
+			Statement stmt = con.createStatement();
+			stmt.executeUpdate("INSERT INTO books (ISBN, Name, Year, Copies) values ("
+				+isbn +"," +name +"," +year +"," +copies +")");
+			System.out.println("Added book " +isbn +".");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void showHelp() {
@@ -72,7 +106,7 @@ public class Connector {
 					addStudent(command);
 					break;
 				case "ab":
-					
+					addBook(command);
 					break;
 				case "rs":
 					
