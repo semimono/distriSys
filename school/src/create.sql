@@ -13,10 +13,11 @@ CREATE TABLE Books (
 );
 
 CREATE TABLE Books2Students (
+ IssueID serial PRIMARY KEY,
  StudentID integer REFERENCES Students (StudentID),
  ISBN integer REFERENCES Books (ISBN),
  IssueDate date,
- DueDate date C,
+ DueDate date
 );
 
 CREATE OR REPLACE FUNCTION IssueBook() RETURNS trigger AS '
