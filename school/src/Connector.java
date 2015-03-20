@@ -140,13 +140,13 @@ public class Connector {
 		}
 		try {
 			Statement stmt = con.createStatement();
+			if (!stmt.executeQuery("SELECT * FROM students WHERE StudentID = " +id).next()) {
+				System.out.println("No student " +id +".");
+				return;
+			}
 			ResultSet set = stmt.executeQuery("SELECT * FROM books WHERE ISBN = " +isbn);
 			if (!set.next()) {
 				System.out.println("No book " +isbn +".");
-				return;
-			}
-			if (!stmt.executeQuery("SELECT * FROM students WHERE StudentID = " +id).next()) {
-				System.out.println("No student " +id +".");
 				return;
 			}
 			int copies = set.getInt("Copies") -1;
