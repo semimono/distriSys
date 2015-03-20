@@ -34,7 +34,7 @@ public class Connector {
 		String degree = command[4];
 		try {
 			Statement stmt = con.createStatement();
-			if (!stmt.executeQuery("SELECT * FROM students WHERE StudentID = " +id).next()) {
+			if (stmt.executeQuery("SELECT * FROM students WHERE StudentID = " +id).next()) {
 				System.out.println("Student with ID " +id +" already exists; cannot overwrite.");
 				return;
 			}
@@ -63,7 +63,7 @@ public class Connector {
 		String name = command[2];
 		try {
 			Statement stmt = con.createStatement();
-			if (!stmt.executeQuery("SELECT * FROM books WHERE ISBN = " +isbn).next()) {
+			if (stmt.executeQuery("SELECT * FROM books WHERE ISBN = " +isbn).next()) {
 				System.out.println("Book with ISBN " +isbn +" already exists; cannot overwrite.");
 				return;
 			}
@@ -89,6 +89,7 @@ public class Connector {
 		}
 		try {
 			Statement stmt = con.createStatement();
+			stmt.executeUpdate("DELETE FROM books2students WHERE StudentID = " +id);
 			int rows = stmt.executeUpdate("DELETE FROM students WHERE StudentID = " +id);
 			if (rows < 1)
 				System.out.println("No students with student ID " +id +".");
@@ -113,6 +114,7 @@ public class Connector {
 		}
 		try {
 			Statement stmt = con.createStatement();
+			stmt.executeUpdate("DELETE FROM books2students WHERE ISBN = " +isbn);
 			int rows = stmt.executeUpdate("DELETE FROM books WHERE ISBN = " +isbn);
 			if (rows < 1)
 				System.out.println("No books with ISBN " +isbn +".");
@@ -140,7 +142,12 @@ public class Connector {
 			Statement stmt = con.createStatement();
 			ResultSet set = stmt.executeQuery("SELECT * FROM books WHERE ISBN = " +isbn);
 			if (!set.next()) {
-
+				System.out.println("No book " +isbn +".");
+				return;
+			}
+			if (!stmt.executeQuery("SELECT * FROM students WHERE StudentID = " +id).next()) {
+				System.out.println("No student " +id +".");
+				return;
 			}
 			int copies = set.getInt("Copies") -1;
 			if (copies < 0) {
