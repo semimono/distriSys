@@ -17,7 +17,6 @@ CREATE TABLE Books2Students (
  ISBN integer REFERENCES Books (ISBN),
  IssueDate date,
  DueDate date C,
- PRIMARY KEY (StudentID, ISBN, IssueDate)
 );
 
 CREATE OR REPLACE FUNCTION IssueBook() RETURNS trigger AS '

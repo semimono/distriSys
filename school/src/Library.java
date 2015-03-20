@@ -5,7 +5,13 @@ import java.util.Scanner;
 /**
  * Created by Cullen on 3/17/2015.
  */
-public class Connector {
+public class Library {
+
+	private static final String host = "faure.cs.colostate.edu";
+	private static final int port = 5432;
+	private static final String schema = "semimono";
+	private static final String user = "semimono";
+	private static final String password = "829904489";
 	
 	private static Connection con;
 
@@ -181,11 +187,8 @@ public class Connector {
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
 		
 		// initialization
-        String host = "faure.cs.colostate.edu";
-        int port = 5432;
-        String schema = "semimono";
 		Class.forName("org.postgresql.Driver");
-        connect("jdbc:postgresql://" +host +":" +port +"/" +schema, "semimono", "829904489");
+        connect("jdbc:postgresql://" +host +":" +port +"/" +schema, user, password);
 		
 		
 		// interaction

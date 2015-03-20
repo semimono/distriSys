@@ -1,9 +1,7 @@
 
 
-all: *.java
-	javac *.java
-
-
+all: Library.java
+	javac Library.java
 
 clean:
-	rm *.class
+	rm Library.class
