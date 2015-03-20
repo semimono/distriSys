@@ -154,8 +154,8 @@ public class Connector {
 				System.out.println("No copies of book " +isbn +" left to issue out.");
 				return;
 			}
-			int rows = stmt.executeUpdate("INSERT INTO books2students (StudentID, ISBN, IssueDate, DueDate) VALUES ("
-				+id +"," +isbn +"," +"CURRENT_DATE,CURRENT_DATE+" +30 +")");
+			int rows = stmt.executeUpdate("INSERT INTO books2students (StudentID, ISBN, IssueDate) VALUES ("
+				+id +"," +isbn +"," +"CURRENT_DATE)");
 			stmt.executeUpdate("UPDATE books SET Copies = " + copies + " WHERE ISBN = " + isbn);
 			System.out.println("Issued book " + isbn + " to student " + id + ".");
 		} catch (SQLException e) {
