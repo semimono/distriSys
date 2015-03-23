@@ -1,14 +1,11 @@
 package cs455.harvester.util;
 
-import com.sun.deploy.util.SystemUtils;
 import cs455.harvester.Page;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 

@@ -1,0 +1,2 @@
+localhost:48000,http://www.cs.colostate.edu/cstop/index.html
+localhost:48002,http://www.math.colostate.edu/

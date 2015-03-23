@@ -39,7 +39,7 @@ public class Protocol {
 	}
 
 	public static String readString(DataInputStream dataIn) throws IOException {
-		byte infoLength = dataIn.readByte();
+		int infoLength = dataIn.readInt();
 		byte[] infoArray = new byte[infoLength];
 		int readInfoLength = dataIn.read(infoArray);
 		if (readInfoLength != infoLength)
