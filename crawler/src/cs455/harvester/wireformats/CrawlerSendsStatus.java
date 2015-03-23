@@ -33,7 +33,7 @@ public class CrawlerSendsStatus implements Event {
 
 		dataOut.writeByte(Protocol.CRAWLER_SENDS_STATUS);
 		dataOut.writeBoolean(finished);
-		dataOut.writeByte(root.toString().length());
+		dataOut.writeInt(root.toString().length());
 		dataOut.writeBytes(root.toString());
 
 		dataOut.flush();

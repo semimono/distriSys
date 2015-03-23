@@ -33,9 +33,9 @@ public class CrawlerSendsPage implements Event {
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
 		dataOut.writeByte(Protocol.CRAWLER_SENDS_URL);
-		dataOut.writeByte(target.toString().length());
+		dataOut.writeInt(target.toString().length());
 		dataOut.writeBytes(target.toString());
-		dataOut.writeByte(from.toString().length());
+		dataOut.writeInt(from.toString().length());
 		dataOut.writeBytes(from.toString());
 
 		dataOut.flush();

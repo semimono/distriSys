@@ -32,7 +32,7 @@ public class CrawlerOpensConnection implements Event {
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 
 		dataOut.writeByte(Protocol.CRAWLER_OPENS_CONNECTION);
-		dataOut.writeByte(root.toString().length());
+		dataOut.writeInt(root.toString().length());
 		dataOut.writeBytes(root.toString());
 
 		dataOut.flush();
