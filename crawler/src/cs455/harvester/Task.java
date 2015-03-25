@@ -47,7 +47,7 @@ public class Task implements Runnable {
 				continue;
 			try {
 				if (href.startsWith("/"))
-					url = new URL(target.getTarget() + href);
+					url = new URL(target.getTarget().getProtocol() +"://" +target.getTarget().getHost() + href);
 				else
 					url = new URL(href);
 			} catch (MalformedURLException e1) {
