@@ -1,7 +1,8 @@
 
+CLASSNAME=GigaSort
 
-all: Gigasort.class
-	jar cf gs.jar Gigasort*.class
+all: $CLASSNAME.class
+	jar cf gs.jar $CLASSNAME*.class
 
-Gigasort.class: Gigasort.java
-	/usr/local/hadoop/bin/hadoop com.sun.tools.javac.Main Gigasort.java
+$CLASSNAME.class: $CLASSNAME.java
+	/usr/local/hadoop/bin/hadoop com.sun.tools.javac.Main $CLASSNAME.java
