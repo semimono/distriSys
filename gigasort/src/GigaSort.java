@@ -29,7 +29,7 @@ public class GigaSort {
 		private long counter = 0;
 
 		public void reduce(Long key, Iterable<Long> values, Context context) throws IOException, InterruptedException {
-			for (IntWritable val : values) {
+			for (Long val : values) {
 				if (counter %1000 == 0)
 					context.write(key, key);
 				++counter;
@@ -53,7 +53,7 @@ public class GigaSort {
 		job.setPartitionerClass(SortPartitioner.class);
 		job.setOutputKeyClass(Long.class);
 		job.setOutputValueClass(Long.class);
-		job.setNumReducerTasks(32);
+		job.setNumReduceTasks(32);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
