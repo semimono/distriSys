@@ -24,14 +24,14 @@ public class GigaSort {
 		}
 	}
 
-	public static class SortReducer extends Reducer<LongWritable, LongWritable, LongWritable, LongWritable> {
+	public static class SortReducer extends Reducer<LongWritable, LongWritable, LongWritable, Text> {
 
 		private long counter = 0;
 
 		public void reduce(LongWritable key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
 			for (LongWritable val : values) {
 				if (counter %1000 == 0)
-					context.write(key, key);
+					context.write(key, new Text());
 				++counter;
 			}
 		}
@@ -52,7 +52,7 @@ public class GigaSort {
 		job.setReducerClass(SortReducer.class);
 		job.setPartitionerClass(SortPartitioner.class);
 		job.setOutputKeyClass(LongWritable.class);
-		job.setOutputValueClass(LongWritable.class);
+		job.setOutputValueClass(Text.class);
 		job.setNumReduceTasks(32);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
