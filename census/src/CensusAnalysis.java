@@ -1,10 +1,10 @@
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -43,7 +43,8 @@ public class CensusAnalysis {
 				long women = readLong(record, 373);
 
 				// Q8 variables
-				
+				long population = readLong(record, 301);
+				long elderly = readLong(record, 1066);
 
 
 			}
@@ -63,7 +64,7 @@ public class CensusAnalysis {
 				long[] rentsPaid = readLongArray(record, 3451, 17);
 
 				// Q7 variables
-
+				long[] houseRooms = readLongArray(record, 2389, 9);
 
 
 				context.write(new Text(state +".Owned"), new LongWritable(owned));
@@ -109,6 +110,26 @@ public class CensusAnalysis {
 		public int getPartition(LongWritable key, LongWritable value, int numReduceTasks) {
 			long partitionSize = Long.MAX_VALUE /numReduceTasks;
 			return (int) (key.get() /partitionSize);
+		}
+	}
+
+	public static class LongArrayWritable implements Writable {
+		public long[] data;
+
+		@Override
+		public void write(DataOutput out) throws IOException {
+			int length = (data == null)? 0: data.length;
+			out.writeInt(length);
+			for(long l: data)
+				out.writeLong(l);
+		}
+
+		@Override
+		public void readFields(DataInput in) throws IOException {
+			int length = in.readInt();
+			data = new long[length];
+			for(int i=0; i<length; ++i)
+				data[i] = in.readLong();
 		}
 	}
 
