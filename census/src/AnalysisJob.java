@@ -283,8 +283,10 @@ public class AnalysisJob {
 					String winningState = null;
 					double winningAverage = 0;
 					for(double average: stateAverages.keySet()) {
-						if (index > 0)
+						if (index > 0) {
+							-- index;
 							continue;
+						}
 						winningAverage = average;
 						winningState = stateAverages.get(average);
 						break;
