@@ -293,6 +293,7 @@ public class AnalysisJob {
 				out.writeLong(l);
 
 			int stateLength = (state == null)? 0: state.length();
+			out.writeInt(stateLength);
 			for(int i=0; i<stateLength; ++i)
 				out.writeChar(state.charAt(i));
 		}
