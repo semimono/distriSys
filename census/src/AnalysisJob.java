@@ -12,9 +12,9 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class CensusAnalysis {
+public class AnalysisJob {
 
-	public static class CensusMapper extends Mapper<Object, Text, Text, LongArrayWritable>{
+	public static class AnalysisMapper extends Mapper<Object, Text, Text, LongArrayWritable>{
 
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String record = value.toString();
@@ -106,7 +106,7 @@ public class CensusAnalysis {
 		}
 	}
 
-	public static class CensusReducer extends Reducer<Text, LongArrayWritable, Text, DoubleWritable> {
+	public static class AnalysisReducer extends Reducer<Text, LongArrayWritable, Text, DoubleWritable> {
 
 		public void reduce(Text originalKey, Iterable<LongArrayWritable> values, Context context) throws IOException, InterruptedException {
 
@@ -127,13 +127,6 @@ public class CensusAnalysis {
 			} else {
 
 			}
-		}
-	}
-
-	public static class SortPartitioner extends Partitioner<LongWritable, LongWritable> {
-		public int getPartition(LongWritable key, LongWritable value, int numReduceTasks) {
-			long partitionSize = Long.MAX_VALUE /numReduceTasks;
-			return (int) (key.get() /partitionSize);
 		}
 	}
 
@@ -164,11 +157,10 @@ public class CensusAnalysis {
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		Job job = Job.getInstance(conf, "GigaSort");
-		job.setJarByClass(CensusAnalysis.class);
-		job.setMapperClass(CensusMapper.class);
-		job.setReducerClass(CensusReducer.class);
-		job.setPartitionerClass(SortPartitioner.class);
+		Job job = Job.getInstance(conf, "AnalysisJob");
+		job.setJarByClass(AnalysisJob.class);
+		job.setMapperClass(AnalysisMapper.class);
+		job.setReducerClass(AnalysisReducer.class);
 		job.setOutputKeyClass(LongWritable.class);
 		job.setOutputValueClass(LongWritable.class);
 		job.setNumReduceTasks(32);
