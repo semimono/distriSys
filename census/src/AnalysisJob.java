@@ -161,8 +161,8 @@ public class AnalysisJob {
 		job.setJarByClass(AnalysisJob.class);
 		job.setMapperClass(AnalysisMapper.class);
 		job.setReducerClass(AnalysisReducer.class);
-		job.setOutputKeyClass(LongWritable.class);
-		job.setOutputValueClass(LongWritable.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(LongArrayWritable.class);
 		job.setNumReduceTasks(32);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
