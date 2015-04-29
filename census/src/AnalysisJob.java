@@ -2,6 +2,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -110,6 +111,7 @@ public class AnalysisJob {
 				long[] houseRooms = readLongArray(record, 2389, 9);
 				LongArrayWritable q7 = new LongArrayWritable();
 				q7.data = houseRooms;
+				q7.state = state;
 				context.write(new Text("95thPercentile"), q7);
 			}
 		}
@@ -156,6 +158,8 @@ public class AnalysisJob {
 			if (fullKey.contains(".")) {
 				String key = fullKey.replaceFirst(".*\\.", "");
 				switch(key) {
+
+					// Q1
 					case "PercentRented": {
 						long rented = 0, owned = 0;
 						for (LongArrayWritable set : values) {
@@ -165,6 +169,8 @@ public class AnalysisJob {
 						context.write(originalKey, new Text(String.valueOf(100.0 * rented / ((double) rented + owned)) + "%"));
 						break;
 					}
+
+					// Q2
 					case "PercentUnmarried": {
 						long unmarried = 0, married = 0;
 						for (LongArrayWritable set : values) {
@@ -174,6 +180,8 @@ public class AnalysisJob {
 						context.write(originalKey, new Text(String.valueOf(100.0 * unmarried / ((double) unmarried + married)) + "%"));
 						break;
 					}
+
+					// Q3
 					case "Ages": {
 						long below18 = 0, middle = 0, older = 0, total = 0;
 						for (LongArrayWritable set : values) {
@@ -187,6 +195,8 @@ public class AnalysisJob {
 						context.write(new Text(fullKey + ".Percent30-39"), new Text(String.valueOf(100.0 * older / ((double) total)) + "%"));
 						break;
 					}
+
+					// Q4
 					case "PercentRural": {
 						long rural = 0, nonRural = 0;
 						for (LongArrayWritable set : values) {
@@ -196,6 +206,8 @@ public class AnalysisJob {
 						context.write(originalKey, new Text(String.valueOf(100.0 * rural / ((double) rural +nonRural)) + "%"));
 						break;
 					}
+
+					// Q5
 					case "MedianValue": {
 						long[] counts = new long[20];
 						for (int i = 0; i < counts.length; ++i)
@@ -216,6 +228,8 @@ public class AnalysisJob {
 						context.write(originalKey, new Text(VALUES[median]));
 						break;
 					}
+
+					// Q6
 					case "MedianRent": {
 						long[] counts = new long[16];
 						for (int i = 0; i < counts.length; ++i)
@@ -238,9 +252,47 @@ public class AnalysisJob {
 					}
 				}
 			} else {
-				if (fullKey.equalsIgnoreCase("95thPercentile")) {
 
+				// Q7
+				if (fullKey.equalsIgnoreCase("95thPercentile")) {
+					HashMap<String, long[]> states = new HashMap<String, long[]>();
+					for (LongArrayWritable set : values) {
+						long[] data;
+						if (!states.containsKey(set.state)) {
+							data = new long[2];
+							data[0] = 0;
+							data[1] = 0;
+							states.put(set.state, data);
+						} else {
+							data = states.get(set.state);
+						}
+						for(int i=0; i<states.get(set.state).length; ++i) {
+							long count = states.get(set.state)[i];
+							data[0] += count *(i+1);
+							data[1] += count;
+						}
+					}
+					TreeMap<Double, String> stateAverages = new TreeMap<Double, String>();
+					for(String state: states.keySet()) {
+						double average = states.get(state)[0] /((double) states.get(state)[1]);
+						while (stateAverages.containsKey(average))
+							average += 0.001;
+						stateAverages.put(average, state);
+					}
+					int index = (int)(stateAverages.size() *0.95);
+					String winningState = null;
+					double winningAverage = 0;
+					for(double average: stateAverages.keySet()) {
+						if (index > 0)
+							continue;
+						winningAverage = average;
+						winningState = stateAverages.get(average);
+						break;
+					}
+					context.write(originalKey, new Text(winningState +" " +winningAverage +" rooms"));
 				} else if (fullKey.equalsIgnoreCase("HighestPercentElderly")) {
+
+					// Q8
 					HashMap<String, long[]> states = new HashMap<String, long[]>();
 					for (LongArrayWritable set : values) {
 						if (!states.containsKey(set.state)) {
