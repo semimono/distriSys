@@ -266,8 +266,8 @@ public class AnalysisJob {
 						} else {
 							data = states.get(set.state);
 						}
-						for(int i=0; i<states.get(set.state).length; ++i) {
-							long count = states.get(set.state)[i];
+						for(int i=0; i<set.data.length; ++i) {
+							long count = set.data[i];
 							data[0] += count *(i+1);
 							data[1] += count;
 						}
@@ -312,7 +312,7 @@ public class AnalysisJob {
 							highest = ((double)stateInfo[0]) /stateInfo[1];
 						}
 					}
-					context.write(originalKey, new Text(highestState +" " +highest +"%"));
+					context.write(originalKey, new Text(highestState +" " +100 *highest +"%"));
 				}
 			}
 		}
