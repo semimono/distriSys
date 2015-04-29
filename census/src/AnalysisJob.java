@@ -87,11 +87,11 @@ public class AnalysisJob {
 				context.write(new Text(state +".Residences.PercentRented"), q1);
 
 				// Q4
-				long urban = readLongSum(record, 1858, 2);
+				long nonRural = readLongSum(record, 1858, 2) +readLong(record, 1885);
 				long rural = readLong(record, 1876);
 				LongArrayWritable q4 = new LongArrayWritable(2);
 				q4.data[0] = rural;
-				q4.data[1] = urban;
+				q4.data[1] = nonRural;
 				context.write(new Text(state +".Residences.PercentRural"), q4);
 
 				// Q5
@@ -101,7 +101,7 @@ public class AnalysisJob {
 				context.write(new Text(state +".Residences.MedianValue"), q5);
 
 				// Q6
-				long[] rentsPaid = readLongArray(record, 3451, 17);
+				long[] rentsPaid = readLongArray(record, 3451, 16);
 				LongArrayWritable q6 = new LongArrayWritable();
 				q6.data = rentsPaid;
 				context.write(new Text(state +".MedianRent"), q6);
@@ -156,23 +156,25 @@ public class AnalysisJob {
 			if (fullKey.contains(".")) {
 				String key = fullKey.replaceFirst(".*\\.", "");
 				switch(key) {
-					case "PercentRented":
+					case "PercentRented": {
 						long rented = 0, owned = 0;
 						for (LongArrayWritable set : values) {
 							rented += set.data[0];
 							owned += set.data[1];
 						}
-						context.write(originalKey, new Text(String.valueOf(100.0 *rented /((double)rented +owned)) +"%"));
+						context.write(originalKey, new Text(String.valueOf(100.0 * rented / ((double) rented + owned)) + "%"));
 						break;
-					case "PercentUnmarried":
+					}
+					case "PercentUnmarried": {
 						long unmarried = 0, married = 0;
 						for (LongArrayWritable set : values) {
 							unmarried += set.data[0];
 							married += set.data[1];
 						}
-						context.write(originalKey, new Text(String.valueOf(100.0 *unmarried /((double)unmarried +married)) +"%"));
+						context.write(originalKey, new Text(String.valueOf(100.0 * unmarried / ((double) unmarried + married)) + "%"));
 						break;
-					case "Ages":
+					}
+					case "Ages": {
 						long below18 = 0, middle = 0, older = 0, total = 0;
 						for (LongArrayWritable set : values) {
 							below18 += set.data[0];
@@ -180,46 +182,60 @@ public class AnalysisJob {
 							older += set.data[2];
 							total += set.data[3];
 						}
-						context.write(new Text(fullKey +".PercentUnder18"), new Text(String.valueOf(100.0 *below18 /((double)total)) +"%"));
-						context.write(new Text(fullKey +".Percent19-29"), new Text(String.valueOf(100.0 *middle /((double)total)) +"%"));
-						context.write(new Text(fullKey +".Percent30-39"), new Text(String.valueOf(100.0 *older /((double)total)) +"%"));
+						context.write(new Text(fullKey + ".PercentUnder18"), new Text(String.valueOf(100.0 * below18 / ((double) total)) + "%"));
+						context.write(new Text(fullKey + ".Percent19-29"), new Text(String.valueOf(100.0 * middle / ((double) total)) + "%"));
+						context.write(new Text(fullKey + ".Percent30-39"), new Text(String.valueOf(100.0 * older / ((double) total)) + "%"));
 						break;
-					case "PercentRural":
-						long rural = 0, urban = 0;
+					}
+					case "PercentRural": {
+						long rural = 0, nonRural = 0;
 						for (LongArrayWritable set : values) {
 							rural += set.data[0];
-							urban += set.data[1];
+							nonRural += set.data[1];
 						}
-						context.write(originalKey, new Text(String.valueOf(100.0 *rural /((double)rural +urban)) +"%"));
+						context.write(originalKey, new Text(String.valueOf(100.0 * rural / ((double) rural +nonRural)) + "%"));
 						break;
-					case "MedianValue":
+					}
+					case "MedianValue": {
 						long[] counts = new long[20];
-						for(int i=0; i<counts.length; ++i)
+						for (int i = 0; i < counts.length; ++i)
 							counts[i] = 0;
+						long total = 0;
 						for (LongArrayWritable set : values) {
-							for(int i=0; i<counts.length; ++i)
+							for (int i = 0; i < counts.length; ++i) {
 								counts[i] += set.data[i];
+								total += set.data[i];
+							}
 						}
-						int max = 0;
-						for(int i=1; i<counts.length; ++i)
-							if (counts[max] < counts[i])
-								max = i;
-						context.write(originalKey, new Text(VALUES[max]));
+						int median = 0;
+						long remaining = total/2;
+						for (; median < counts.length; ++median)
+							remaining -= counts[median];
+							if (remaining < 0)
+								break;
+						context.write(originalKey, new Text(VALUES[median]));
 						break;
-					case "MedianRent":
-						counts = new long[17];
-						for(int i=0; i<counts.length; ++i)
+					}
+					case "MedianRent": {
+						long[] counts = new long[16];
+						for (int i = 0; i < counts.length; ++i)
 							counts[i] = 0;
+						long total = 0;
 						for (LongArrayWritable set : values) {
-							for(int i=0; i<counts.length; ++i)
+							for (int i = 0; i < counts.length; ++i) {
 								counts[i] += set.data[i];
+								total += set.data[i];
+							}
 						}
-						max = 0;
-						for(int i=1; i<counts.length; ++i)
-							if (counts[max] < counts[i])
-								max = i;
-						context.write(originalKey, new Text(RENTS[max]));
+						int median = 0;
+						long remaining = total/2;
+						for (; median < counts.length; ++median)
+							remaining -= counts[median];
+						if (remaining < 0)
+							break;
+						context.write(originalKey, new Text(RENTS[median]));
 						break;
+					}
 				}
 			} else {
 				if (fullKey.equalsIgnoreCase("95thPercentile")) {
@@ -249,32 +265,6 @@ public class AnalysisJob {
 			}
 		}
 	}
-
-	// unused
-//	public static class AnalysisCombiner extends Reducer<Text, LongArrayWritable, Text, LongArrayWritable> {
-//
-//		public void reduce(Text originalKey, Iterable<LongArrayWritable> values, Context context) throws IOException, InterruptedException {
-//
-//			String fullKey = originalKey.toString();
-//			if (fullKey.contains(".")) {
-//				String key = fullKey.replaceFirst(".*\\.", "");
-//				switch(key) {
-//					case "PercentUnmarried":
-//						LongArrayWritable out = new LongArrayWritable(2);
-//						out.data[0] = 0;
-//						out.data[1] = 0;
-//						for (LongArrayWritable set : values) {
-//							out.data[0] += set.data[0];
-//							out.data[1] += set.data[1];
-//						}
-//						context.write(originalKey, out);
-//						break;
-//				}
-//			} else {
-//
-//			}
-//		}
-//	}
 
 	public static class LongArrayWritable implements Writable {
 		public long[] data;
@@ -321,7 +311,7 @@ public class AnalysisJob {
 		job.setReducerClass(AnalysisReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(LongArrayWritable.class);
-		job.setNumReduceTasks(32);
+//		job.setNumReduceTasks(32);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
