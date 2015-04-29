@@ -14,23 +14,35 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class CensusAnalysis {
 
-	public static class CensusMapper extends Mapper<Object, Text, Text, LongWritable>{
+	public static class CensusMapper extends Mapper<Object, Text, Text, LongArrayWritable>{
 
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String record = value.toString();
 
+			// only processing records with summary level 100
+			int summaryLevel = Integer.parseInt(record.substring(10, 13));
+			if (summaryLevel != 100)
+				return;
+
 			// metadata
 			String state = record.substring(8, 10);
-			int summaryLevel = Integer.parseInt(record.substring(10, 13));
-			int recordPartIndex = Integer.parseInt(record.substring(24, 28));  //basically which segment, 1 or 2
-			int recordPartCount = Integer.parseInt(record.substring(28, 32));  //basically how many segments (usually 2)
+			int recordPartIndex = Integer.parseInt(record.substring(24, 28));
 
+			// processing for segment 1 records
 			if (recordPartIndex == 1) {
 				// Q2 variables
 				long unmarriedMen = readLong(record, 4423);
 				long marriedMen = readLongSum(record, 4432, 3);
 				long unmarriedWomen = readLong(record, 4468);
 				long marriedWomen = readLongSum(record, 4477, 3);
+				LongArrayWritable q2m = new LongArrayWritable(2);
+				q2m.data[0] = unmarriedMen;
+				q2m.data[1] = marriedMen;
+				context.write(new Text(state +".UnmarriedMen"), q2m);
+				LongArrayWritable q2w = new LongArrayWritable(2);
+				q2w.data[0] = unmarriedWomen;
+				q2w.data[1] = marriedWomen;
+				context.write(new Text(state +".UnmarriedWomen"), q2w);
 
 				// Q3 variables
 				long age1Men = readLongSum(record, 3865, 13);
@@ -45,13 +57,15 @@ public class CensusAnalysis {
 				// Q8 variables
 				long population = readLong(record, 301);
 				long elderly = readLong(record, 1066);
-
-
 			}
+
+			// processing for segment 2 records
 			if (recordPartIndex == 2) {
 				// Q1 variables
 				long owned = readLong(record, 1804);
 				long rented = readLong(record, 1813);
+//				context.write(new Text(state +".Owned"), new LongWritable(owned));
+//				context.write(new Text(state +".Rented"), new LongWritable(rented));
 
 				// Q4 variables
 				long urban = readLongSum(record, 1858, 2);
@@ -65,10 +79,6 @@ public class CensusAnalysis {
 
 				// Q7 variables
 				long[] houseRooms = readLongArray(record, 2389, 9);
-
-
-				context.write(new Text(state +".Owned"), new LongWritable(owned));
-				context.write(new Text(state +".Rented"), new LongWritable(rented));
 			}
 		}
 
@@ -96,12 +106,26 @@ public class CensusAnalysis {
 		}
 	}
 
-	public static class CensusReducer extends Reducer<Text, LongWritable, Text, DoubleWritable> {
+	public static class CensusReducer extends Reducer<Text, LongArrayWritable, Text, DoubleWritable> {
 
-		public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
+		public void reduce(Text originalKey, Iterable<LongArrayWritable> values, Context context) throws IOException, InterruptedException {
 
-			for (LongWritable val : values) {
-				context.write(key, new DoubleWritable(val.get()));
+			String fullKey = originalKey.toString();
+			if (fullKey.contains(".")) {
+				String key = fullKey.replaceFirst(".*?\\.", "");
+				switch(key) {
+					case "UnmarriedMen":
+					case "UnmarriedWomen":
+						long unmarried = 0, married = 0;
+						for (LongArrayWritable set : values) {
+							unmarried += set.data[0];
+							married += set.data[1];
+						}
+						context.write(originalKey, new DoubleWritable(unmarried /((double)unmarried +married)));
+						break;
+				}
+			} else {
+
 			}
 		}
 	}
@@ -115,6 +139,11 @@ public class CensusAnalysis {
 
 	public static class LongArrayWritable implements Writable {
 		public long[] data;
+
+		LongArrayWritable() {}
+		LongArrayWritable(int size) {
+			data = new long[size];
+		}
 
 		@Override
 		public void write(DataOutput out) throws IOException {
